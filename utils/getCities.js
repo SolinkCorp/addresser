@@ -24,8 +24,17 @@ async function getDataForCountry(country_code){
       citiesData.forEach(function(element) {
         var cityData = element.split('\t');
         //console.log(cityData[2] + ", " + cityData[4]);
-        if (cityData[4] && cityData[4].length == 2 && cityHash.hasOwnProperty(cityData[4])) {
-          cityHash[cityData[4]].push(cityData[2]);
+        let city = cityData[2]; // Default US & PR data
+        // If Canadian data, it is structured differently
+        if (country_code_upper === 'CA') {
+          city = cityData[7] || cityData[5] || cityData[2];
+        }
+        let region = cityData[4];
+        if (country_code_upper === 'PR') {
+          region = cityData[0];
+        }
+        if (region && region.length == 2 && cityHash.hasOwnProperty(region)) {
+          cityHash[region].push(city);
         }
       });
 
@@ -109,13 +118,9 @@ function mergeFiles(inputs, output){
   });
 }
 
+getDataForCountry("CA");
+getDataForCountry("US");
+getDataForCountry("PR");
 
-(async () => {
-  await getDataForCountry("CA");
-  await new Promise(r => setTimeout(r, 15000));
-  await getDataForCountry("US");
-
-  mergeFiles(["../data/us-cities.json", "../data/ca-cities.json"], "../data/cities.json");
-  mergeFiles(["../data/us-states.json", "../data/ca-states.json"], "../data/states.json");
-})();
-
+mergeFiles(["../data/us-cities.json", "../data/ca-cities.json", "../data/pr-cities.json"], "../data/cities.json");
+mergeFiles(["../data/us-states.json", "../data/ca-states.json"], "../data/states.json");
