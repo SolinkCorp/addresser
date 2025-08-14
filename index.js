@@ -1,8 +1,8 @@
 var allStates = require('./data/states.json');
 var usStreetTypes = require('./data/us-street-types.json');
 var allCities = require('./data/cities.json');
-var usStates = require('./data/us-states.json');
 var usCities = require('./data/us-cities.json');
+const prCities = require('./data/pr-cities.json');
 
 
 
@@ -100,7 +100,11 @@ module.exports = {
 
     // Check if the last section contains country reference (Just supports US for now)
     var countrySection = addressParts[addressParts.length-1].trim();
-    if (countrySection === 'US' || countrySection === 'USA' || countrySection === 'United States' || countrySection === 'Canada') {
+    let isPuertoRico = false;
+    if (countrySection === 'US' || countrySection === 'USA' || countrySection === 'United States' || countrySection === 'Canada' || countrySection === 'PR' || countrySection === 'Puerto Rico') {
+      if (countrySection === 'PR' || countrySection === 'Puerto Rico') {
+        isPuertoRico = true;
+      }
       addressParts.splice(-1,1);
     }
     
@@ -126,25 +130,34 @@ module.exports = {
       addressParts.splice(-1,1);
       stateString = addressParts[addressParts.length-1].trim();
     }
-    // First check for just an Abbreviation
-    if (stateString.length == 2 && getKeyByValue(allStates,stateString.toUpperCase())) {
+    // First check for Puerto Rico
+    if (stateString.length == 2 && stateString.toUpperCase() === 'PR') {
+      isPuertoRico = true;
+      stateString = stateString.substring(0, stateString.length - 2);
+    } else if (stateString.length == 2 && getKeyByValue(allStates,stateString.toUpperCase())) {
       result.stateAbbreviation = stateString.toUpperCase();
       result.stateName = toTitleCase(getKeyByValue(allStates,stateString.toUpperCase()));
       stateString = stateString.substring(0, stateString.length - 2);
     } else {
       // Next check if the state string ends in state name or abbeviation
       // (state abbreviation must be preceded by a space to ensure accuracy)
-      for (var key in allStates) {
-        var re = new RegExp(" " + allStates[key] + "$|" + key + "$", "i");
-        if (stateString.match(re)) {
-          stateString = stateString.replace(re,"");
-          result.stateAbbreviation = allStates[key];
-          result.stateName = toTitleCase(key);
-          break;
+      const rePR = new RegExp(" PR$|PR$", "i");
+      if (stateString.match(rePR)) {
+        isPuertoRico = true;
+        stateString = stateString.replace(rePR,"");
+      } else {
+        for (const key in allStates) {
+          const re = new RegExp(" " + allStates[key] + "$|" + key + "$", "i");
+          if (stateString.match(re)) {
+            stateString = stateString.replace(re,"");
+            result.stateAbbreviation = allStates[key];
+            result.stateName = toTitleCase(key);
+            break;
+          }
         }
       }
     }
-    if (!result.stateAbbreviation || result.stateAbbreviation.length != 2) {
+    if (!isPuertoRico && (!result.stateAbbreviation || result.stateAbbreviation.length != 2)) {
       throw 'Can not parse address. State not found.';
     }
 
@@ -159,15 +172,27 @@ module.exports = {
     }
     result.placeName = "";
    
-    allCities[result.stateAbbreviation].some(function(element) {
-      var re = new RegExp(element + "$", "i");
-      if (placeString.match(re)) {
-        placeString = placeString.replace(re,""); // Carve off the place name
-        
-        result.placeName = element;
-        return element; // Found a winner - stop looking for cities
-      }
-    });
+    if (isPuertoRico) {
+      prCities['PR'].some(function(element) {
+        const re = new RegExp(element + "$", "i");
+        if (placeString.match(re)) {
+          placeString = placeString.replace(re,""); // Carve off the place name
+          
+          result.placeName = element;
+          return element; // Found - stop looking for cities
+        }
+      });
+    } else if (result.stateAbbreviation && allCities[result.stateAbbreviation]) {
+      allCities[result.stateAbbreviation].some(function(element) {
+        const re = new RegExp(element + "$", "i");
+        if (placeString.match(re)) {
+          placeString = placeString.replace(re,""); // Carve off the place name
+          
+          result.placeName = element;
+          return element; // Found - stop looking for cities
+        }
+      });
+    }
     if (!result.placeName) {
       result.placeName = toTitleCase(placeString);
       placeString = "";
@@ -215,7 +240,35 @@ module.exports = {
       var rePO = new RegExp('(P\\.?O\\.?|POST\\s+OFFICE)\\s+(BOX|DRAWER)\\s\\w+', 'i');
       var reAveLetter = new RegExp('\.\*\\b(ave.?|avenue)\.\*\\b[a-zA-Z]\\b', 'i');
       var reNoSuffix = new RegExp('\\b\\d+[a-z]?\\s[a-zA-Z0-9_ ]+\\b', 'i');
-      if (streetString.match(reAveLetter)) {
+      
+      // Puerto Rico specific patterns
+      const rePRStreet = new RegExp('\\b\\d+\\s+(calle|avenida|cam|camino|paseo|plaza|callejon)\\s+[a-zA-Z0-9_ ]+', 'i');
+      const rePRCarr = new RegExp('\\bcarr\\s+\\d+\\s+km\\s+[\\d\\.]+(?:\\s+hm\\s+\\d+)?', 'i');
+      
+      if (isPuertoRico && streetString.match(rePRCarr)) {
+        // Handle highway with KM marker format: CARR 1 KM 10.3 HM 2 or CARR 1 KM 10.3
+        result.addressLine1 = streetString.match(rePRCarr)[0];
+        streetString = streetString.replace(rePRCarr,"").trim();
+        if (streetString && streetString.length > 0) {
+          result.addressLine2 = streetString;
+        }
+        const streetParts = result.addressLine1.split(' ');
+        result.streetSuffix = 'CARR';
+        result.streetName = streetParts[1]; // Highway number
+        result.streetNumber = streetParts[3]; // KM marker
+      } else if (isPuertoRico && streetString.match(rePRStreet)) {
+        // Handle normal street format for Puerto Rico (no street suffix, technically a street prefix)
+        result.addressLine1 = streetString.match(rePRStreet)[0];
+        streetString = streetString.replace(rePRStreet,"").trim();
+        if (streetString && streetString.length > 0) {
+          result.addressLine2 = streetString;
+        }
+        const streetParts = result.addressLine1.split(' ');
+        result.streetNumber = streetParts[0];
+        result.streetSuffix = streetParts[1].toUpperCase();
+        result.streetName = streetParts.slice(2).join(' ');
+        result.addressLine1 = result.streetNumber + ' ' + result.streetSuffix + ' ' + result.streetName;
+      } else if (streetString.match(reAveLetter)) {
         result.addressLine1 = streetString.match(reAveLetter)[0];
         streetString = streetString.replace(reAveLetter,"").trim(); // Carve off the first address line
         if (streetString && streetString.length > 0) {
@@ -314,8 +367,12 @@ module.exports = {
     if (result.hasOwnProperty('addressLine2')) {
       addressString += ', ' + result.addressLine2;
     }
-    if (addressString && result.hasOwnProperty("placeName") && result.hasOwnProperty("stateAbbreviation") && result.hasOwnProperty("zipCode")) {
-      var idString = addressString + ", " + result.placeName + ", " + result.stateAbbreviation + " " + result.zipCode;
+    if (addressString && result.hasOwnProperty("placeName") && result.hasOwnProperty("zipCode")) {
+      let idString = addressString + ", " + result.placeName;
+      if (result.hasOwnProperty("stateAbbreviation")) {
+        idString += ", " + result.stateAbbreviation;
+      }
+      idString += " " + result.zipCode;
       result['formattedAddress'] = idString;
       result['id'] = encodeURI(idString.replace(/ /g, '-').replace(/\#/g, '-').replace(/\//g, '-').replace(/\./g, '-'));
     }
