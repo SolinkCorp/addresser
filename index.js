@@ -99,12 +99,9 @@ module.exports = {
     var result = {};
 
     // Check if the last section contains country reference (Just supports US for now)
-    var countrySection = addressParts[addressParts.length-1].trim();
-    let isPuertoRico = false;
-    if (countrySection === 'US' || countrySection === 'USA' || countrySection === 'United States' || countrySection === 'Canada' || countrySection === 'PR' || countrySection === 'Puerto Rico') {
-      if (countrySection === 'PR' || countrySection === 'Puerto Rico') {
-        isPuertoRico = true;
-      }
+    var countrySection = addressParts[addressParts.length-1].trim().toUpperCase();
+    let isPuertoRico = countrySection.toUpperCase() === 'PR' || countrySection.toUpperCase() === 'PUERTO RICO';
+    if (countrySection === 'US' || countrySection === 'USA' || countrySection === 'UNITED STATES' || countrySection === 'CANADA' || countrySection === 'PR' || countrySection === 'PUERTO RICO') {
       addressParts.splice(-1,1);
     }
     
