@@ -903,6 +903,60 @@ describe('#parseAddress', function() {
         expect(result.zipCode).to.equal("M3K5K9");
         expect(result.hasOwnProperty("zipCodePlusFour")).to.equal(false);
     });
+    
+    it('should parse a Puerto Rico address', function() {
+        const result = addresser.parseAddress("69 Calle 2, San Juan, 00927, Puerto Rico");
+
+        expect(result).to.be.an('object');
+        expect(result).to.have.property('placeName');
+        expect(result).to.have.property('zipCode');
+        expect(result).to.have.property('streetNumber');
+        expect(result).to.have.property('streetName');
+        expect(result).to.have.property('addressLine1');
+        expect(result).to.not.have.property('stateAbbreviation');
+        expect(result).to.not.have.property('stateName');
+
+        expect(result.streetNumber).to.equal("69");
+        expect(result.streetName).to.equal("2");
+        expect(result.streetSuffix).to.equal("CALLE");
+        expect(result.placeName).to.equal("San Juan");
+        expect(result.zipCode).to.equal("00927");
+        expect(result.addressLine1).to.equal("69 CALLE 2");
+    });
+
+    it('should parse a Puerto Rico address with Plaza', function() {
+        const result = addresser.parseAddress('100 PLAZA LAS AMERICAS, SAN JUAN PR 00927');
+
+        expect(result.streetNumber).to.equal("100");
+        expect(result.streetName).to.equal("LAS AMERICAS");
+        expect(result.streetSuffix).to.equal("PLAZA");
+        expect(result.placeName).to.equal("San Juan");
+        expect(result.zipCode).to.equal("00927");
+        expect(result.addressLine1).to.equal("100 PLAZA LAS AMERICAS");
+    });
+
+    it('should parse a Puerto Rico highway address with hectometer', function() {
+        const result = addresser.parseAddress('CARR 303 KM 15.1 HM 2, CAGUAS PR 00725');
+
+        expect(result.streetSuffix).to.equal("CARR");
+        expect(result.streetName).to.equal("303");
+        expect(result.streetNumber).to.equal("15.1");
+        expect(result.addressLine1).to.equal("CARR 303 KM 15.1 HM 2");
+        expect(result.placeName).to.equal("Caguas");
+        expect(result.zipCode).to.equal("00725");
+    });
+
+    it('should parse a Puerto Rico highway address with municipality', function() {
+        const result = addresser.parseAddress('CARR 303 KM 15.1, Barrio of Las Palmas, Cabo Rojo, 00623, PR');
+
+        expect(result.streetSuffix).to.equal("CARR");
+        expect(result.streetName).to.equal("303");
+        expect(result.streetNumber).to.equal("15.1");
+        expect(result.addressLine1).to.equal("CARR 303 KM 15.1");
+        expect(result.addressLine2).to.equal("Barrio of Las Palmas");
+        expect(result.placeName).to.equal("Cabo Rojo");
+        expect(result.zipCode).to.equal("00623");
+    });
 });
 
 describe('#randomCity', function() {
