@@ -617,6 +617,190 @@ describe('#parseAddress', function() {
         expect(result).to.not.have.property("zipCode");        
         expect(result).to.not.have.property("zipCodePlusFour");
     });
+
+    it('should parse "67A Alameda De Las Pulgas style address', function() {
+        var result = addresser.parseAddress("67A Alameda De Las Pulgas, Redwood City, CA 94062");
+        expect(result.streetNumber).to.equal("67A");
+        expect(result.streetName).to.equal("Alameda De Las Pulgas");
+        expect(result).to.not.have.property('streetSuffix')
+        expect(result.addressLine1).to.equal("67A Alameda De Las Pulgas");
+        expect(result).to.not.have.property("addressLine2");        
+        expect(result.placeName).to.equal("Redwood City");
+        expect(result.stateAbbreviation).to.equal("CA");
+        expect(result.stateName).to.equal("California");
+        expect(result.zipCode).to.equal("94062");     
+        expect(result).to.not.have.property("zipCodePlusFour");
+    });
+
+    it('should parse "630A Pinellas Bwy S Apt 3202 style address', function() {
+        var result = addresser.parseAddress("630A Pinellas Bwy S Apt 3202, Saint Petersburg, FL 33715");
+        expect(result.streetNumber).to.equal("630A");
+        expect(result.streetName).to.equal("Pinellas Bwy S");
+        expect(result).to.not.have.property('streetSuffix')
+        expect(result.addressLine1).to.equal("630A Pinellas Bwy S");
+        expect(result.addressLine2).to.equal("Apt 3202");       
+        expect(result.placeName).to.equal("Saint Petersburg");
+        expect(result.stateAbbreviation).to.equal("FL");
+        expect(result.stateName).to.equal("Florida");
+        expect(result.zipCode).to.equal("33715");     
+        expect(result).to.not.have.property("zipCodePlusFour");
+    });
+
+    it('should parse "24497A Tupelo Sr style address', function() {
+        var result = addresser.parseAddress("24497A Tupelo Sr, Saint Robert, MO 65584");
+        expect(result.streetNumber).to.equal("24497A");
+        expect(result.streetName).to.equal("Tupelo Sr");
+        expect(result).to.not.have.property('streetSuffix')
+        expect(result.addressLine1).to.equal("24497A Tupelo Sr");
+        expect(result).to.not.have.property("addressLine2");      
+        expect(result.placeName).to.equal("Saint Robert");
+        expect(result.stateAbbreviation).to.equal("MO");
+        expect(result.stateName).to.equal("Missouri");
+        expect(result.zipCode).to.equal("65584");     
+        expect(result).to.not.have.property("zipCodePlusFour");
+    });
+
+    it('should parse North Chesterfield city address with Turn suffix', function() {
+        var result = addresser.parseAddress("1300 Providence Ridge Turn, North Chesterfield, VA 23236");
+        expect(result.streetNumber).to.equal("1300");
+        expect(result.streetName).to.equal("Providence Ridge");
+        expect(result.streetSuffix).to.equal("Turn");
+        expect(result.addressLine1).to.equal("1300 Providence Ridge Turn");
+        expect(result).to.not.have.property("addressLine2");        
+        expect(result.placeName).to.equal("North Chesterfield");
+        expect(result.stateAbbreviation).to.equal("VA");
+        expect(result.stateName).to.equal("Virginia");
+        expect(result.zipCode).to.equal("23236");     
+        expect(result).to.not.have.property("zipCodePlusFour");
+    });
+
+    it('should parse North Chesterfield city address with Apartment line 2', function() {
+        var result = addresser.parseAddress("5210 Castlewood Rd Apt E, North Chesterfield, VA 23234");
+        expect(result.streetNumber).to.equal("5210");
+        expect(result.streetName).to.equal("Castlewood");
+        expect(result.streetSuffix).to.equal("Rd");
+        expect(result.addressLine1).to.equal("5210 Castlewood Rd");
+        expect(result.addressLine2).to.equal("Apt E");       
+        expect(result.placeName).to.equal("North Chesterfield");
+        expect(result.stateAbbreviation).to.equal("VA");
+        expect(result.stateName).to.equal("Virginia");
+        expect(result.zipCode).to.equal("23234");     
+        expect(result).to.not.have.property("zipCodePlusFour");
+    });
+
+    it('should parse Oberlin city address', function() {
+        var result = addresser.parseAddress("186 N Harrisburg St Apt 3, Oberlin, PA 17113");
+        expect(result.streetNumber).to.equal("186");
+        expect(result.streetName).to.equal("N Harrisburg");
+        expect(result.streetSuffix).to.equal("St");
+        expect(result.addressLine1).to.equal("186 N Harrisburg St");
+        expect(result.addressLine2).to.equal("Apt 3");        
+        expect(result.placeName).to.equal("Oberlin");
+        expect(result.stateAbbreviation).to.equal("PA");
+        expect(result.stateName).to.equal("Pennsylvania");
+        expect(result.zipCode).to.equal("17113");     
+        expect(result).to.not.have.property("zipCodePlusFour");
+    });
+
+    it('should parse West Reading city address', function() {
+        var result = addresser.parseAddress("400 Franklin St Apt 205, West Reading, PA 19611");
+        expect(result.streetNumber).to.equal("400");
+        expect(result.streetName).to.equal("Franklin");
+        expect(result.streetSuffix).to.equal("St");
+        expect(result.addressLine1).to.equal("400 Franklin St");
+        expect(result.addressLine2).to.equal("Apt 205");        
+        expect(result.placeName).to.equal("West Reading");
+        expect(result.stateAbbreviation).to.equal("PA");
+        expect(result.stateName).to.equal("Pennsylvania");
+        expect(result.zipCode).to.equal("19611");     
+        expect(result).to.not.have.property("zipCodePlusFour");
+    });
+
+    it('should parse West Pittston city address', function() {
+        var result = addresser.parseAddress("315 Salem St Apt A, West Pittston, PA 18643");
+        expect(result.streetNumber).to.equal("315");
+        expect(result.streetName).to.equal("Salem");
+        expect(result.streetSuffix).to.equal("St");
+        expect(result.addressLine1).to.equal("315 Salem St");
+        expect(result.addressLine2).to.equal("Apt A");        
+        expect(result.placeName).to.equal("West Pittston");
+        expect(result.stateAbbreviation).to.equal("PA");
+        expect(result.stateName).to.equal("Pennsylvania");
+        expect(result.zipCode).to.equal("18643");     
+        expect(result).to.not.have.property("zipCodePlusFour");
+    });
+
+    it('should parse Steelton city address', function() {
+        var result = addresser.parseAddress("485 State St Apt B, Steelton, PA 17113");
+        expect(result.streetNumber).to.equal("485");
+        expect(result.streetName).to.equal("State");
+        expect(result.streetSuffix).to.equal("St");
+        expect(result.addressLine1).to.equal("485 State St");
+        expect(result.addressLine2).to.equal("Apt B");        
+        expect(result.placeName).to.equal("Steelton");
+        expect(result.stateAbbreviation).to.equal("PA");
+        expect(result.stateName).to.equal("Pennsylvania");
+        expect(result.zipCode).to.equal("17113");     
+        expect(result).to.not.have.property("zipCodePlusFour");
+    });
+
+    it('should parse East Cambridge city address', function() {
+        var result = addresser.parseAddress("11 Bristol St Apt 2, East Cambridge, MA 02141");
+        expect(result.streetNumber).to.equal("11");
+        expect(result.streetName).to.equal("Bristol");
+        expect(result.streetSuffix).to.equal("St");
+        expect(result.addressLine1).to.equal("11 Bristol St");
+        expect(result.addressLine2).to.equal("Apt 2");        
+        expect(result.placeName).to.equal("East Cambridge");
+        expect(result.stateAbbreviation).to.equal("MA");
+        expect(result.stateName).to.equal("Massachusetts");
+        expect(result.zipCode).to.equal("02141");     
+        expect(result).to.not.have.property("zipCodePlusFour");
+    });
+
+    it('should parse a South Chesterfield city address', function() {
+        var result = addresser.parseAddress("19917 Oakland Ave Unit 1, South Chesterfield, VA 23834");
+        expect(result.streetNumber).to.equal("19917");
+        expect(result.streetName).to.equal("Oakland");
+        expect(result.streetSuffix).to.equal("Ave");
+        expect(result.addressLine1).to.equal("19917 Oakland Ave");
+        expect(result.addressLine2).to.equal("Unit 1");        
+        expect(result.placeName).to.equal("South Chesterfield");
+        expect(result.stateAbbreviation).to.equal("VA");
+        expect(result.stateName).to.equal("Virginia");
+        expect(result.zipCode).to.equal("23834");     
+        expect(result).to.not.have.property("zipCodePlusFour");
+    });
+
+    it('should parse a East Rochester city address', function() {
+        var result = addresser.parseAddress("802 Spruce St Unit A, East Rochester, PA 15074");
+        expect(result.streetNumber).to.equal("802");
+        expect(result.streetName).to.equal("Spruce");
+        expect(result.streetSuffix).to.equal("St");
+        expect(result.addressLine1).to.equal("802 Spruce St");
+        expect(result.addressLine2).to.equal("Unit A");        
+        expect(result.placeName).to.equal("East Rochester");
+        expect(result.stateAbbreviation).to.equal("PA");
+        expect(result.stateName).to.equal("Pennsylvania");
+        expect(result.zipCode).to.equal("15074");     
+        expect(result).to.not.have.property("zipCodePlusFour");
+    });
+    
+    
+    it('should parse a Spring Lake Park city address', function() {
+        var result = addresser.parseAddress("8070 Central Ave NE Unit 8070-206, Spring Lake Park, MN 55432");
+        expect(result.streetNumber).to.equal("8070");
+        expect(result.streetName).to.equal("Central");
+        expect(result.streetSuffix).to.equal("Ave");
+        expect(result.addressLine1).to.equal("8070 Central Ave NE");
+        expect(result.addressLine2).to.equal("Unit 8070-206");        
+        expect(result.placeName).to.equal("Spring Lake Park");
+        expect(result.stateAbbreviation).to.equal("MN");
+        expect(result.stateName).to.equal("Minnesota");
+        expect(result.zipCode).to.equal("55432");     
+        expect(result).to.not.have.property("zipCodePlusFour");
+    });
+    
     
     it('should parse street name of N Portola with unit name', function() {
         var result = addresser.parseAddress("47 N Portola, # 35, Laguna Beach, CA");
@@ -718,6 +902,60 @@ describe('#parseAddress', function() {
         expect(result.stateName).to.equal("Ontario");
         expect(result.zipCode).to.equal("M3K5K9");
         expect(result.hasOwnProperty("zipCodePlusFour")).to.equal(false);
+    });
+    
+    it('should parse a Puerto Rico address', function() {
+        const result = addresser.parseAddress("69 Calle 2, San Juan, 00927, Puerto Rico");
+
+        expect(result).to.be.an('object');
+        expect(result).to.have.property('placeName');
+        expect(result).to.have.property('zipCode');
+        expect(result).to.have.property('streetNumber');
+        expect(result).to.have.property('streetName');
+        expect(result).to.have.property('addressLine1');
+        expect(result).to.not.have.property('stateAbbreviation');
+        expect(result).to.not.have.property('stateName');
+
+        expect(result.streetNumber).to.equal("69");
+        expect(result.streetName).to.equal("2");
+        expect(result.streetSuffix).to.equal("CALLE");
+        expect(result.placeName).to.equal("San Juan");
+        expect(result.zipCode).to.equal("00927");
+        expect(result.addressLine1).to.equal("69 CALLE 2");
+    });
+
+    it('should parse a Puerto Rico address with Plaza', function() {
+        const result = addresser.parseAddress('100 PLAZA LAS AMERICAS, SAN JUAN PR 00927');
+
+        expect(result.streetNumber).to.equal("100");
+        expect(result.streetName).to.equal("LAS AMERICAS");
+        expect(result.streetSuffix).to.equal("PLAZA");
+        expect(result.placeName).to.equal("San Juan");
+        expect(result.zipCode).to.equal("00927");
+        expect(result.addressLine1).to.equal("100 PLAZA LAS AMERICAS");
+    });
+
+    it('should parse a Puerto Rico highway address with hectometer', function() {
+        const result = addresser.parseAddress('CARR 303 KM 15.1 HM 2, CAGUAS PR 00725');
+
+        expect(result.streetSuffix).to.equal("CARR");
+        expect(result.streetName).to.equal("303");
+        expect(result.streetNumber).to.equal("15.1");
+        expect(result.addressLine1).to.equal("CARR 303 KM 15.1 HM 2");
+        expect(result.placeName).to.equal("Caguas");
+        expect(result.zipCode).to.equal("00725");
+    });
+
+    it('should parse a Puerto Rico highway address with municipality', function() {
+        const result = addresser.parseAddress('CARR 303 KM 15.1, Barrio of Las Palmas, Cabo Rojo, 00623, PR');
+
+        expect(result.streetSuffix).to.equal("CARR");
+        expect(result.streetName).to.equal("303");
+        expect(result.streetNumber).to.equal("15.1");
+        expect(result.addressLine1).to.equal("CARR 303 KM 15.1");
+        expect(result.addressLine2).to.equal("Barrio of Las Palmas");
+        expect(result.placeName).to.equal("Cabo Rojo");
+        expect(result.zipCode).to.equal("00623");
     });
 });
 
