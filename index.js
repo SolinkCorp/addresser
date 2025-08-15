@@ -3,7 +3,7 @@ var usStreetTypes = require('./data/us-street-types.json');
 var allCities = require('./data/cities.json');
 var usCities = require('./data/us-cities.json');
 const prCities = require('./data/pr-cities.json');
-const { detectCountry, isPR } = require('./detect-country');
+const { detectCountry, isPR } = require('./detectCountry');
 const { US_STREET_DIRECTIONAL, US_LINE2_PREFIXES, PUERTO_RICO_PATTERNS, POSTAL_CODE_PATTERNS, ADDRESS_PATTERNS } = require('./constants');
 
 
