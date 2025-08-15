@@ -40,6 +40,8 @@ module.exports = {
     if (!address) {
       throw 'Argument must be a non-empty string.';
     }
+    const puertoRico = 'Puerto Rico';
+    const puertoRicoAbbreviation = "PR";
     // Deal with any repeated spaces
     address = address.replace(/  +/g, ' ');
     // Assume comma, newline and tab is an intentional delimiter
@@ -64,7 +66,14 @@ module.exports = {
     // Assume the last address section contains state, zip or both
     var stateString = addressParts[addressParts.length-1].trim();
     // Parse and remove zip or zip plus 4 from end of string
-    if (stateString.match(POSTAL_CODE_PATTERNS.US_ZIP)) {
+    // First check for Puerto Rico zip+state patterns
+    if (stateString.match(PUERTO_RICO_PATTERNS.ZIP_WITH_PR)) {
+      var prMatch = stateString.match(PUERTO_RICO_PATTERNS.ZIP_WITH_PR);
+      result.zipCode = prMatch[1];  // zip code
+      result.stateAbbreviation = prMatch[2];  // PR
+      result.stateName = puertoRico;
+      stateString = stateString.replace(PUERTO_RICO_PATTERNS.ZIP_WITH_PR, '').trim();
+    } else if (stateString.match(POSTAL_CODE_PATTERNS.US_ZIP)) {
       result.zipCode = stateString.match(POSTAL_CODE_PATTERNS.US_ZIP)[0];
       stateString = stateString.substring(0, stateString.length - 5).trim();
     } else if (stateString.match(POSTAL_CODE_PATTERNS.US_ZIP_PLUS_4)) {
@@ -84,9 +93,9 @@ module.exports = {
       stateString = addressParts[addressParts.length-1].trim();
     }
     // Parse state/province abbreviation
-    if (stateString.length == 2 && stateString.toUpperCase() === 'PR') {
-      result.stateAbbreviation = 'PR';
-      result.stateName = 'Puerto Rico';
+    if (stateString.length == 2 && stateString.toUpperCase() === puertoRicoAbbreviation) {
+      result.stateAbbreviation = puertoRicoAbbreviation;
+      result.stateName = puertoRico;
       stateString = stateString.substring(0, stateString.length - 2);
     } else if (stateString.length == 2 && getKeyByValue(allStates,stateString.toUpperCase())) {
       result.stateAbbreviation = stateString.toUpperCase();
@@ -96,8 +105,8 @@ module.exports = {
       // Next check if the state string ends in state name or abbeviation
       // (state abbreviation must be preceded by a space to ensure accuracy)
       if (stateString.match(PUERTO_RICO_PATTERNS.DETECTION)) {
-        result.stateAbbreviation = 'PR';
-        result.stateName = 'Puerto Rico';
+        result.stateAbbreviation = puertoRicoAbbreviation;
+        result.stateName = puertoRico;
         stateString = stateString.replace(PUERTO_RICO_PATTERNS.DETECTION,"");
       } else {
         for (const key in allStates) {
@@ -121,8 +130,8 @@ module.exports = {
     
     // Ensure Puerto Rico addresses have proper state information
     if (isPR(detectedCountry) && !result.stateAbbreviation) {
-      result.stateAbbreviation = 'PR';
-      result.stateName = 'Puerto Rico';
+      result.stateAbbreviation = puertoRicoAbbreviation;
+      result.stateName = puertoRico;
     }
     
     // Validate that we have a state/province for non-PR addresses
@@ -143,7 +152,7 @@ module.exports = {
    
     // Use appropriate city list based on detected country
     if (isPR(detectedCountry)) {
-      prCities['PR'].some(function(element) {
+      prCities[puertoRicoAbbreviation].some(function(element) {
         const re = new RegExp(element + "$", "i");
         if (placeString.match(re)) {
           placeString = placeString.replace(re,""); // Carve off the place name

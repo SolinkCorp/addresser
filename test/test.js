@@ -1085,9 +1085,38 @@ describe('#parseAddress, should detect country from address if missing from addr
         expect(result.country).to.equal("Puerto Rico");
         expect(result.countryAbbreviation).to.equal("PR");
     });
+    it('should parse a Puerto Rico address with PR country missing comma', function() {
+        const result = addresser.parseAddress('CARR 303 KM 15.1, Cabo Rojo, 00623 PR');
+
+        expect(result.streetNumber).to.equal("15.1");
+        expect(result.streetName).to.equal("303");
+        expect(result.streetSuffix).to.equal("CARR");
+        expect(result.placeName).to.equal("Cabo Rojo");
+        expect(result.zipCode).to.equal("00623");
+        expect(result.addressLine1).to.equal("CARR 303 KM 15.1");
+        expect(result.stateAbbreviation).to.equal("PR");
+        expect(result.stateName).to.equal("Puerto Rico");
+        expect(result.country).to.equal("Puerto Rico");
+        expect(result.countryAbbreviation).to.equal("PR");
+    });
+
+    it('should parse a Puerto Rico address with PR as state and country missing comma', function() {
+        const result = addresser.parseAddress('CARR 303 KM 15.1, Cabo Rojo, PR 00623 PR');
+
+        expect(result.streetNumber).to.equal("15.1");
+        expect(result.streetName).to.equal("303");
+        expect(result.streetSuffix).to.equal("CARR");
+        expect(result.placeName).to.equal("Cabo Rojo");
+        expect(result.zipCode).to.equal("00623");
+        expect(result.addressLine1).to.equal("CARR 303 KM 15.1");
+        expect(result.stateAbbreviation).to.equal("PR");
+        expect(result.stateName).to.equal("Puerto Rico");
+        expect(result.country).to.equal("Puerto Rico");
+        expect(result.countryAbbreviation).to.equal("PR");
+    });
 
     it('should parse a Puerto Rico highway address with hectometer', function() {
-        const result = addresser.parseAddress('CARR 303 KM 15.1 HM 2, CAGUAS PR 00725');
+        const result = addresser.parseAddress('CARR 303 KM 15.1 HM 2, CAGUAS, PR 00725');
 
         expect(result.streetSuffix).to.equal("CARR");
         expect(result.streetName).to.equal("303");
@@ -1102,7 +1131,7 @@ describe('#parseAddress, should detect country from address if missing from addr
     });
 
     it('should parse a Puerto Rico highway address with municipality', function() {
-        const result = addresser.parseAddress('CARR 303 KM 15.1, Barrio of Las Palmas, Cabo Rojo, 00623, PR');
+        const result = addresser.parseAddress('CARR 303 KM 15.1, Barrio of Las Palmas, Cabo Rojo, pr 00623, PR');
 
         expect(result.streetSuffix).to.equal("CARR");
         expect(result.streetName).to.equal("303");
