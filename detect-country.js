@@ -24,7 +24,6 @@ function detectFromCountrySection(countrySection) {
   }
 
   const upperSection = countrySection.trim().toUpperCase();
-  console.log("detectFromCountrySection upperSection", upperSection);
   // Check each country's aliases
   for (const [countryCode, aliases] of Object.entries(COUNTRY_ALIASES)) {
     if (aliases.includes(upperSection)) {
