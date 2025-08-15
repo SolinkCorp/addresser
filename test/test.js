@@ -926,8 +926,9 @@ describe('#parseAddress', function() {
         expect(result).to.have.property('streetNumber');
         expect(result).to.have.property('streetName');
         expect(result).to.have.property('addressLine1');
-        expect(result).to.not.have.property('stateAbbreviation');
-        expect(result).to.not.have.property('stateName');
+        expect(result).to.have.property('stateAbbreviation');
+        expect(result).to.have.property('stateName');
+        console.log("result", result);
 
         expect(result.streetNumber).to.equal("69");
         expect(result.streetName).to.equal("2");
@@ -935,6 +936,8 @@ describe('#parseAddress', function() {
         expect(result.placeName).to.equal("San Juan");
         expect(result.zipCode).to.equal("00927");
         expect(result.addressLine1).to.equal("69 CALLE 2");
+        expect(result.stateAbbreviation).to.equal("PR");
+        expect(result.stateName).to.equal("Puerto Rico");
     });
 
     it('should parse a Puerto Rico address with Plaza', function() {
@@ -969,6 +972,63 @@ describe('#parseAddress', function() {
         expect(result.addressLine2).to.equal("Barrio of Las Palmas");
         expect(result.placeName).to.equal("Cabo Rojo");
         expect(result.zipCode).to.equal("00623");
+    });
+
+    // Country Detection Tests
+    it('should detect United States from state abbreviation', function() {
+        var result = addresser.parseAddress("123 Main St, Austin, TX 78701");
+        expect(result.country).to.equal("United States");
+        expect(result.countryAbbreviation).to.equal("US");
+        expect(result.stateAbbreviation).to.equal("TX");
+        expect(result.stateName).to.equal("Texas");
+    });
+
+    it('should detect Canada from British Columbia province', function() {
+        var result = addresser.parseAddress("123 Main St, Vancouver, BC V6B 1A1");
+        expect(result.country).to.equal("Canada");
+        expect(result.countryAbbreviation).to.equal("CA");
+        expect(result.stateAbbreviation).to.equal("BC");
+        expect(result.stateName).to.equal("British Columbia");
+    });
+
+    it('should detect Canada from Quebec province name', function() {
+        var result = addresser.parseAddress("123 Rue Principal, Montreal, Quebec H3B 1A1");
+        expect(result.country).to.equal("Canada");
+        expect(result.countryAbbreviation).to.equal("CA");
+        expect(result.stateAbbreviation).to.equal("QC");
+        expect(result.stateName).to.equal("Quebec");
+    });
+
+    it('should detect Puerto Rico from PR abbreviation', function() {
+        var result = addresser.parseAddress("123 Calle Principal, San Juan, PR 00901");
+        expect(result.country).to.equal("Puerto Rico");
+        expect(result.countryAbbreviation).to.equal("PR");
+        expect(result.stateAbbreviation).to.equal("PR");
+        expect(result.stateName).to.equal("Puerto Rico");
+    });
+
+    it('should detect country from explicit country section - Canada', function() {
+        var result = addresser.parseAddress("123 Main St, Toronto, ON M5V 3A8, Canada");
+        expect(result.country).to.equal("Canada");
+        expect(result.countryAbbreviation).to.equal("CA");
+        expect(result.stateAbbreviation).to.equal("ON");
+        expect(result.stateName).to.equal("Ontario");
+    });
+
+    it('should detect country from explicit country section - USA', function() {
+        var result = addresser.parseAddress("123 Main St, New York, NY 10001, USA");
+        expect(result.country).to.equal("United States");
+        expect(result.countryAbbreviation).to.equal("US");
+        expect(result.stateAbbreviation).to.equal("NY");
+        expect(result.stateName).to.equal("New York");
+    });
+
+    it('should not confuse CA state with Canada country', function() {
+        var result = addresser.parseAddress("123 Main St, Los Angeles, CA 90210");
+        expect(result.country).to.equal("United States");
+        expect(result.countryAbbreviation).to.equal("US");
+        expect(result.stateAbbreviation).to.equal("CA");
+        expect(result.stateName).to.equal("California");
     });
 });
 
