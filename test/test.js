@@ -903,7 +903,20 @@ describe('#parseAddress', function() {
         expect(result.zipCode).to.equal("M3K5K9");
         expect(result.hasOwnProperty("zipCodePlusFour")).to.equal(false);
     });
-    
+    it('should parse a simple Canadian Address with lower case letters', function() {
+        var result = addresser.parseAddress("123 Main St, toronto, on m3k5k9, canada");
+        expect(result.streetNumber).to.equal("123");
+        expect(result.streetName).to.equal("Main");
+        expect(result.streetSuffix).to.equal("St");
+        expect(result.hasOwnProperty("streetDirection")).to.equal(false);
+        expect(result.addressLine1).to.equal("123 Main St");
+        expect(result.hasOwnProperty("addressLine2")).to.equal(false);
+        expect(result.placeName).to.equal("Toronto");
+        expect(result.stateAbbreviation).to.equal("ON");
+        expect(result.stateName).to.equal("Ontario");
+        expect(result.zipCode).to.equal("M3K5K9");
+        expect(result.hasOwnProperty("zipCodePlusFour")).to.equal(false);
+    });
     it('should parse a Puerto Rico address', function() {
         const result = addresser.parseAddress("69 Calle 2, San Juan, 00927, Puerto Rico");
 

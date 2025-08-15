@@ -104,7 +104,7 @@ module.exports = {
     if (countrySection === 'US' || countrySection === 'USA' || countrySection === 'UNITED STATES' || countrySection === 'CANADA' || countrySection === 'PR' || countrySection === 'PUERTO RICO') {
       addressParts.splice(-1,1);
     }
-    
+    console.log("countrySection", countrySection, isPuertoRico);
     // Assume the last address section contains state, zip or both
     var stateString = addressParts[addressParts.length-1].trim();
     // Parse and remove zip or zip plus 4 from end of string
@@ -116,8 +116,9 @@ module.exports = {
       result.zipCode = zipString.substring(0,5);
       result.zipCodePlusFour = zipString;
       stateString = stateString.substring(0, stateString.length - 10).trim();
-    } else if(stateString.match(/[A-Z]\d[A-Z] ?\d[A-Z]\d/)){
-      result.zipCode = stateString.match(/[A-Z]\d[A-Z] ?\d[A-Z]\d/)[0];
+      console.log("stateString 2", stateString);
+    } else if(stateString.match(/[A-Za-z]\d[A-Za-z] ?\d[A-Za-z]\d/)){
+      result.zipCode = stateString.match(/[A-Za-z]\d[A-Za-z] ?\d[A-Za-z]\d/)[0].toUpperCase();
       stateString = stateString.substring(0, stateString.length - result.zipCode.length).trim();
     }
     // Parse and remove state
