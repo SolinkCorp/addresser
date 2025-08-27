@@ -1,8 +1,10 @@
 var allStates = require('./data/states.json');
 var usStreetTypes = require('./data/us-street-types.json');
 var allCities = require('./data/cities.json');
-var usStates = require('./data/us-states.json');
 var usCities = require('./data/us-cities.json');
+const prCities = require('./data/pr-cities.json');
+const { detectCountry, isPR } = require('./detectCountry');
+const { US_STREET_DIRECTIONAL, US_LINE2_PREFIXES, PUERTO_RICO_PATTERNS, POSTAL_CODE_PATTERNS, ADDRESS_PATTERNS } = require('./constants');
 
 
 
@@ -31,59 +33,6 @@ function randomProperty (obj) {
   return keys[ keys.length * Math.random() << 0];
 };
 
-var usStreetDirectional = {
-    north       : "N",
-    northeast   : "NE",
-    east        : "E",
-    southeast   : "SE",
-    south       : "S",
-    southwest   : "SW",
-    west        : "W",
-    northwest   : "NW",
-};
-
-var usLine2Prefixes = {
-    'APARTMENT' :	'APT',
-    'APT'       : 'APT',
-    'BASEMENT'  :	'BSMT',
-    'BSMT'      : 'BSMT',
-    'BLDG'      : 'BLDG',
-    'BUILDING'  : 'BLDG',
-    'DEPARTMENT' :	'DEPT',
-    'DEPT'      : 'DEPT',
-    'FL'        : 'FL',
-    'FLOOR'     :	'FL',
-    'FRNT'      : 'FRNT',
-    'FRONT'	    : 'FRNT',
-    'HANGAR'    :	'HNGR',
-    'HNGR'      : 'HNGR',
-    'LBBY'      : 'LBBY',
-    'LOBBY'     :	'LBBY',
-    'LOT'       : 'LOT',
-    'LOWER'     :	'LOWR',
-    'LOWR'      : 'LOWER',
-    'OFC'       : 'OFC',
-    'OFFICE'	  : 'OFC',
-    'PENTHOUSE'	: 'PH',
-    'PH'        : 'PH',
-    'PIER'      :	'PIER',
-    'REAR'      :	'REAR',
-    'RM'        : 'RM',
-    'ROOM'      :	'RM',
-    'SIDE'      :	'SIDE',
-    'SLIP'      :	'SLIP',
-    'SPACE'     :	'SPC',
-    'SPC'       : 'SPC',
-    'STE'       : 'STE',
-    'STOP'      :	'STOP',
-    'SUITE'     :	'STE',
-    'TRAILER'	  : 'TRLR',
-    'TRLR'      : 'TRLR',
-    'UNIT'      :	'UNIT',
-    'UPPER'     : 'UPPR',
-    'UPPR'      : 'UPPR',
-    '#'         : '#',
-}
 
 module.exports = {
   parseAddress: function(address) {
@@ -91,6 +40,8 @@ module.exports = {
     if (!address) {
       throw 'Argument must be a non-empty string.';
     }
+    const puertoRico = 'Puerto Rico';
+    const puertoRicoAbbreviation = "PR";
     // Deal with any repeated spaces
     address = address.replace(/  +/g, ' ');
     // Assume comma, newline and tab is an intentional delimiter
@@ -98,25 +49,40 @@ module.exports = {
     
     var result = {};
 
-    // Check if the last section contains country reference (Just supports US for now)
-    var countrySection = addressParts[addressParts.length-1].trim();
-    if (countrySection === 'US' || countrySection === 'USA' || countrySection === 'United States' || countrySection === 'Canada') {
+    // Detect country early and store for single detection call
+    var countrySection = addressParts[addressParts.length-1].trim().toUpperCase();
+    
+    // Initial country detection to check if we should remove country section
+    const initialCountryDetection = detectCountry({ 
+      countrySection: countrySection,
+      addressString: address 
+    });
+    if (initialCountryDetection.shouldRemoveCountrySection) {
       addressParts.splice(-1,1);
     }
     
+    // Store detected country info here after parsing state/province
+    let detectedCountry = null;
     // Assume the last address section contains state, zip or both
     var stateString = addressParts[addressParts.length-1].trim();
     // Parse and remove zip or zip plus 4 from end of string
-    if (stateString.match(/\d{5}$/)) {
-      result.zipCode = stateString.match(/\d{5}$/)[0];
+    // First check for Puerto Rico zip+state patterns
+    if (stateString.match(PUERTO_RICO_PATTERNS.ZIP_WITH_PR)) {
+      var prMatch = stateString.match(PUERTO_RICO_PATTERNS.ZIP_WITH_PR);
+      result.zipCode = prMatch[1];  // zip code
+      result.stateAbbreviation = prMatch[2];  // PR
+      result.stateName = puertoRico;
+      stateString = stateString.replace(PUERTO_RICO_PATTERNS.ZIP_WITH_PR, '').trim();
+    } else if (stateString.match(POSTAL_CODE_PATTERNS.US_ZIP)) {
+      result.zipCode = stateString.match(POSTAL_CODE_PATTERNS.US_ZIP)[0];
       stateString = stateString.substring(0, stateString.length - 5).trim();
-    } else if (stateString.match(/\d{5}-\d{4}$/)) {
-      var zipString = stateString.match(/\d{5}-\d{4}$/)[0];
+    } else if (stateString.match(POSTAL_CODE_PATTERNS.US_ZIP_PLUS_4)) {
+      var zipString = stateString.match(POSTAL_CODE_PATTERNS.US_ZIP_PLUS_4)[0];
       result.zipCode = zipString.substring(0,5);
       result.zipCodePlusFour = zipString;
       stateString = stateString.substring(0, stateString.length - 10).trim();
-    } else if(stateString.match(/[A-Z]\d[A-Z] ?\d[A-Z]\d/)){
-      result.zipCode = stateString.match(/[A-Z]\d[A-Z] ?\d[A-Z]\d/)[0];
+    } else if(stateString.match(POSTAL_CODE_PATTERNS.CANADIAN_POSTAL)){
+      result.zipCode = stateString.match(POSTAL_CODE_PATTERNS.CANADIAN_POSTAL)[0].toUpperCase();
       stateString = stateString.substring(0, stateString.length - result.zipCode.length).trim();
     }
     // Parse and remove state
@@ -126,25 +92,50 @@ module.exports = {
       addressParts.splice(-1,1);
       stateString = addressParts[addressParts.length-1].trim();
     }
-    // First check for just an Abbreviation
-    if (stateString.length == 2 && getKeyByValue(allStates,stateString.toUpperCase())) {
+    // Parse state/province abbreviation
+    if (stateString.length == 2 && stateString.toUpperCase() === puertoRicoAbbreviation) {
+      result.stateAbbreviation = puertoRicoAbbreviation;
+      result.stateName = puertoRico;
+      stateString = stateString.substring(0, stateString.length - 2);
+    } else if (stateString.length == 2 && getKeyByValue(allStates,stateString.toUpperCase())) {
       result.stateAbbreviation = stateString.toUpperCase();
       result.stateName = toTitleCase(getKeyByValue(allStates,stateString.toUpperCase()));
       stateString = stateString.substring(0, stateString.length - 2);
     } else {
       // Next check if the state string ends in state name or abbeviation
       // (state abbreviation must be preceded by a space to ensure accuracy)
-      for (var key in allStates) {
-        var re = new RegExp(" " + allStates[key] + "$|" + key + "$", "i");
-        if (stateString.match(re)) {
-          stateString = stateString.replace(re,"");
-          result.stateAbbreviation = allStates[key];
-          result.stateName = toTitleCase(key);
-          break;
+      if (stateString.match(PUERTO_RICO_PATTERNS.DETECTION)) {
+        result.stateAbbreviation = puertoRicoAbbreviation;
+        result.stateName = puertoRico;
+        stateString = stateString.replace(PUERTO_RICO_PATTERNS.DETECTION,"");
+      } else {
+        for (const key in allStates) {
+          const re = new RegExp(" " + allStates[key] + "$|" + key + "$", "i");
+          if (stateString.match(re)) {
+            stateString = stateString.replace(re,"");
+            result.stateAbbreviation = allStates[key];
+            result.stateName = toTitleCase(key);
+            break;
+          }
         }
       }
     }
-    if (!result.stateAbbreviation || result.stateAbbreviation.length != 2) {
+    // Comprehensive country detection passing in parsed state information
+    detectedCountry = detectCountry({
+      countrySection: countrySection,
+      stateAbbreviation: result.stateAbbreviation,
+      stateName: result.stateName,
+      addressString: address
+    });
+    
+    // Ensure Puerto Rico addresses have proper state information
+    if (isPR(detectedCountry) && !result.stateAbbreviation) {
+      result.stateAbbreviation = puertoRicoAbbreviation;
+      result.stateName = puertoRico;
+    }
+    
+    // Validate that we have a state/province for non-PR addresses
+    if ((!result.stateAbbreviation || result.stateAbbreviation.length != 2)) {
       throw 'Can not parse address. State not found.';
     }
 
@@ -158,15 +149,28 @@ module.exports = {
       placeString = addressParts[addressParts.length-1].trim();
     }
     result.placeName = "";
-    allCities[result.stateAbbreviation].some(function(element) {
-      var re = new RegExp(element + "$", "i");
-      if (placeString.match(re)) {
-        placeString = placeString.replace(re,""); // Carve off the place name
-        
-        result.placeName = element;
-        return element; // Found a winner - stop looking for cities
-      }
-    });
+   
+    // Use appropriate city list based on detected country
+    if (isPR(detectedCountry)) {
+      prCities[puertoRicoAbbreviation].some(function(element) {
+        const re = new RegExp(element + "$", "i");
+        if (placeString.match(re)) {
+          placeString = placeString.replace(re,""); // Carve off the place name
+          result.placeName = element;
+          return element; // Found - stop looking for cities
+        }
+      });
+    } else if (result.stateAbbreviation && allCities[result.stateAbbreviation]) {
+      // Use cities for US states and Canadian provinces
+      allCities[result.stateAbbreviation].some(function(element) {
+        const re = new RegExp(element + "$", "i");
+        if (placeString.match(re)) {
+          placeString = placeString.replace(re,""); // Carve off the place name
+          result.placeName = element;
+          return element; // Found - stop looking for cities
+        }
+      });
+    }
     if (!result.placeName) {
       result.placeName = toTitleCase(placeString);
       placeString = "";
@@ -174,8 +178,8 @@ module.exports = {
     
     // Parse the street data
     var streetString = "";
-    var usStreetDirectionalString = Object.keys(usStreetDirectional).map(x => usStreetDirectional[x]).join('|');
-    var usLine2String = Object.keys(usLine2Prefixes).join('|');
+    var usStreetDirectionalString = Object.keys(US_STREET_DIRECTIONAL).map(x => US_STREET_DIRECTIONAL[x]).join('|');
+    var usLine2String = Object.keys(US_LINE2_PREFIXES).join('|');
 
     if (placeString.length > 0) { // Check if anything is left of last section
       addressParts[addressParts.length-1] = placeString;
@@ -211,10 +215,34 @@ module.exports = {
       var reStreet = new RegExp('\.\*\\b(?:' + 
         Object.keys(usStreetTypes).join('|') + ')\\b\\.?' + 
         '( +(?:' + usStreetDirectionalString + ')\\b)?', 'i');
-      var rePO = new RegExp('(P\\.?O\\.?|POST\\s+OFFICE)\\s+(BOX|DRAWER)\\s\\w+', 'i');
-      var reAveLetter = new RegExp('\.\*\\b(ave.?|avenue)\.\*\\b[a-zA-Z]\\b', 'i');
-      var reNoSuffix = new RegExp('\\b\\d+\\s[a-zA-Z0-9_ ]+\\b', 'i');
-      if (streetString.match(reAveLetter)) {
+      var rePO = ADDRESS_PATTERNS.PO_BOX;
+      var reAveLetter = ADDRESS_PATTERNS.AVENUE_LETTER;
+      var reNoSuffix = ADDRESS_PATTERNS.NO_SUFFIX;
+      
+      if (isPR(detectedCountry) && streetString.match(PUERTO_RICO_PATTERNS.HIGHWAY)) {
+        // Handle highway with KM marker format: CARR 1 KM 10.3 HM 2 or CARR 1 KM 10.3
+        result.addressLine1 = streetString.match(PUERTO_RICO_PATTERNS.HIGHWAY)[0];
+        streetString = streetString.replace(PUERTO_RICO_PATTERNS.HIGHWAY,"").trim();
+        if (streetString && streetString.length > 0) {
+          result.addressLine2 = streetString;
+        }
+        const streetParts = result.addressLine1.split(' ');
+        result.streetSuffix = 'CARR';
+        result.streetName = streetParts[1]; // Highway number
+        result.streetNumber = streetParts[3]; // KM marker
+      } else if (isPR(detectedCountry) && streetString.match(PUERTO_RICO_PATTERNS.STREET)) {
+        // Handle normal street format for Puerto Rico (no street suffix, technically a street prefix)
+        result.addressLine1 = streetString.match(PUERTO_RICO_PATTERNS.STREET)[0];
+        streetString = streetString.replace(PUERTO_RICO_PATTERNS.STREET,"").trim();
+        if (streetString && streetString.length > 0) {
+          result.addressLine2 = streetString;
+        }
+        const streetParts = result.addressLine1.split(' ');
+        result.streetNumber = streetParts[0];
+        result.streetSuffix = streetParts[1].toUpperCase();
+        result.streetName = streetParts.slice(2).join(' ');
+        result.addressLine1 = result.streetNumber + ' ' + result.streetSuffix + ' ' + result.streetName;
+      } else if (streetString.match(reAveLetter)) {
         result.addressLine1 = streetString.match(reAveLetter)[0];
         streetString = streetString.replace(reAveLetter,"").trim(); // Carve off the first address line
         if (streetString && streetString.length > 0) {
@@ -313,8 +341,15 @@ module.exports = {
     if (result.hasOwnProperty('addressLine2')) {
       addressString += ', ' + result.addressLine2;
     }
-    if (addressString && result.hasOwnProperty("placeName") && result.hasOwnProperty("stateAbbreviation") && result.hasOwnProperty("zipCode")) {
-      var idString = addressString + ", " + result.placeName + ", " + result.stateAbbreviation + " " + result.zipCode;
+
+    result.country = detectedCountry.country;
+    result.countryAbbreviation = detectedCountry.countryAbbreviation;
+    if (addressString && result.hasOwnProperty("placeName") && result.hasOwnProperty("zipCode")) {
+      let idString = addressString + ", " + result.placeName;
+      if (result.hasOwnProperty("stateAbbreviation")) {
+        idString += ", " + result.stateAbbreviation;
+      }
+      idString += " " + result.zipCode;
       result['formattedAddress'] = idString;
       result['id'] = encodeURI(idString.replace(/ /g, '-').replace(/\#/g, '-').replace(/\//g, '-').replace(/\./g, '-'));
     }
