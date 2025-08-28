@@ -157,7 +157,6 @@ describe('#parseAddress with format method - NOONLIGHT Format Tests', function()
             // Test validation by manually removing addressLine1 from a valid result
             const result = addresser.parseAddress("123 Main St, Conway, SC 29526");
             delete result.addressLine1;
-            console.log(result);
             expect(function() {
                 result.format('NOONLIGHT');
             }).to.throw('NOONLIGHT format requires address line');

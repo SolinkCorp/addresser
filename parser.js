@@ -4,6 +4,7 @@ const allCities = require('./data/cities.json');
 const prCities = require('./data/pr-cities.json');
 const { detectCountry, isPR } = require('./detectCountry');
 const { PUERTO_RICO_PATTERNS, POSTAL_CODE_PATTERNS, ADDRESS_PATTERNS, US_LINE2_PREFIXES, US_STREET_DIRECTIONAL } = require('./constants');
+const { getKeyByValue, toTitleCase } = require('./utils/utils');
 
 'use strict';
 
@@ -12,17 +13,6 @@ const { PUERTO_RICO_PATTERNS, POSTAL_CODE_PATTERNS, ADDRESS_PATTERNS, US_LINE2_P
  * @param {string} address
  * @return {string}
  **/
- 
-//TODO move this to utils file
-function getKeyByValue(object, value) {
-  return Object.keys(object).find(key => object[key] === value);
-}
-
-function toTitleCase(str) {
-    return str.replace(/\w\S*/g, function(txt){
-        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
-    });
-}
 
 function parser(address) {
   // Validate a non-empty string was passed
@@ -82,11 +72,11 @@ function parser(address) {
     stateString = addressParts[addressParts.length-1].trim();
   }
   // Parse state/province abbreviation
-  if (stateString.length == 2 && stateString.toUpperCase() === puertoRicoAbbreviation) {
+  if (stateString.length === 2 && stateString.toUpperCase() === puertoRicoAbbreviation) {
     result.stateAbbreviation = puertoRicoAbbreviation;
     result.stateName = puertoRico;
     stateString = stateString.substring(0, stateString.length - 2);
-  } else if (stateString.length == 2 && getKeyByValue(allStates,stateString.toUpperCase())) {
+  } else if (stateString.length === 2 && getKeyByValue(allStates,stateString.toUpperCase())) {
     result.stateAbbreviation = stateString.toUpperCase();
     result.stateName = toTitleCase(getKeyByValue(allStates,stateString.toUpperCase()));
     stateString = stateString.substring(0, stateString.length - 2);
@@ -124,7 +114,7 @@ function parser(address) {
   }
   
   // Validate that we have a state/province for non-PR addresses
-  if ((!result.stateAbbreviation || result.stateAbbreviation.length != 2)) {
+  if ((!result.stateAbbreviation || result.stateAbbreviation.length !== 2)) {
     throw 'Can not parse address. State not found.';
   }
 
@@ -201,7 +191,7 @@ function parser(address) {
       }
     }
     //Assume street address comes first and the rest is secondary address
-    const reStreet = new RegExp('\.\*\\b(?:' + 
+    const reStreet = new RegExp('.*\\b(?:' + 
       Object.keys(usStreetTypes).join('|') + ')\\b\\.?' + 
       '( +(?:' + usStreetDirectionalString + ')\\b)?', 'i');
     const rePO = ADDRESS_PATTERNS.PO_BOX;
@@ -272,7 +262,7 @@ function parser(address) {
       const streetParts = result.addressLine1.split(' ');
   
       // Check if directional is last element
-      const re = new RegExp('\.\*\\b(?:' + usStreetDirectionalString + ')$', 'i');
+      const re = new RegExp('.*\\b(?:' + usStreetDirectionalString + ')$', 'i');
       if (result.addressLine1.match(re)) {
         result.streetDirection = streetParts.pop().toUpperCase();
       }
@@ -305,7 +295,7 @@ function parser(address) {
       streetString = streetString.replace(rePO,"").trim(); // Carve off the first address line
     } else if (streetString.match(reNoSuffix)) {
       // Check for a line2 prefix followed by a single word. If found peel that off as addressLine2
-      const reLine2 = new RegExp('\\s(' + usLine2String + ')\\.?\\s[a-zA-Z0-9_\-]+$','i');
+      const reLine2 = new RegExp('\\s(' + usLine2String + ')\\.?\\s[a-zA-Z0-9_-]+$','i');
       if (streetString.match(reLine2)) {
         result.addressLine2 = streetString.match(reLine2)[0].trim();
         streetString = streetString.replace(reLine2,"").trim(); // Carve off the first address line
