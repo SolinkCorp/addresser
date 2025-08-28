@@ -24,14 +24,14 @@ async function getDataForCountry(country_code){
       citiesData.forEach(function(element) {
         var cityData = element.split('\t');
         //console.log(cityData[2] + ", " + cityData[4]);
-        let city = cityData[2]; // Default US & PR data
+        let city = cityData[2] ? cityData[2].trim() : ''; // Default US & PR data
         // If Canadian data, it is structured differently
         if (country_code_upper === 'CA') {
-          city = cityData[7] || cityData[5] || cityData[2];
+          city = (cityData[7] || cityData[5] || cityData[2] || '').trim();
         }
         let region = cityData[4];
         if (country_code_upper === 'PR') {
-          region = cityData[0];
+          region = cityData[0].trim();
         }
         if (region && region.length == 2 && cityHash.hasOwnProperty(region)) {
           cityHash[region].push(city);
