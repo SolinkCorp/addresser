@@ -105,6 +105,8 @@ const US_LINE2_PREFIXES = {
 const PUERTO_RICO_PATTERNS = {
   STREET: /\b\d+\s+(calle|avenida|cam|camino|paseo|plaza|callejon)\s+[a-zA-Z0-9_ ]+/i,
   HIGHWAY: /\bcarr\s+\d+\s+km\s+[\d\.]+(?:\s+hm\s+\d+)?/i,
+  // Pattern for addresses that start directly with KM (kilometer marker) without CARR prefix
+  KM_MARKER: /^(?!.*\bcarr\b).*\bkm\s+[\d\.]+(?:\s+hm\s+\d+)?/i,
   // Pattern for detecting Puerto Rico in strings - handles various zip+state formats
   DETECTION: / PR$|PR$| PUERTO RICO$|PUERTO RICO$|\b\d{5},?\s+PR\b|\bPR\s+\d{5},?\s+PR\b/i,
   // Pattern specifically for zip code extraction with PR as country
@@ -118,11 +120,31 @@ const POSTAL_CODE_PATTERNS = {
   CANADIAN_POSTAL: /[A-Za-z]\d[A-Za-z] ?\d[A-Za-z]\d/
 };
 
+// Puerto Rico specific constants
+const PUERTO_RICO_CONSTANTS = {
+  NAME: 'Puerto Rico',
+  ABBREVIATION: 'PR'
+};
+
 // Regular expressions for address parsing
 const ADDRESS_PATTERNS = {
   PO_BOX: /(P\.?O\.?|POST\s+OFFICE)\s+(BOX|DRAWER)\s\w+/i,
   AVENUE_LETTER: /.*\b(ave.?|avenue).*\b[a-zA-Z]\b/i,
-  NO_SUFFIX: /\b\d+[a-z]?\s[a-zA-Z0-9_ ]+\b/i
+  NO_SUFFIX: /\b\d+[a-z]?\s[a-zA-Z0-9_ ]+\b/i,
+  
+  // Street patterns
+  HIGHWAY: /\b\d+\s+(?:[A-Z]+\s+)?(?:hwy|highway|hiway|hiwy|hway)\s+\d+[A-Za-z]*/i,
+  US_HIGHWAY: /\b\d+\s+(?:N|S|E|W)\s+U\.?S\.?\s+(?:hwy|highway|hiway|hiwy|hway)\s+\d+[A-Za-z]*/i,
+  
+  // Directional patterns
+  STREET_DIRECTIONAL_SUFFIX: '.*\\b(?:north|northeast|east|southeast|south|southwest|west|northwest|n|ne|e|se|s|sw|w|nw)$',
+  
+  // State route patterns (CA-49, TX-35, etc.)
+  STATE_ROUTE: /\b\d+\s+[A-Z]{2}-\d+[A-Za-z]*\b/i,
+  
+  // Line 2 patterns
+  LINE2_PREFIX: '^(APARTMENT|APT|BASEMENT|BSMT|BLDG|BUILDING|DEPARTMENT|DEPT|FL|FLOOR|FRNT|FRONT|HANGAR|HNGR|LBBY|LOBBY|LOT|LOWER|LOWR|OFC|OFFICE|PENTHOUSE|PH|PIER|REAR|RM|ROOM|SIDE|SLIP|SPACE|SPC|STE|STOP|SUITE|TRAILER|TRLR|UNIT|UPPER|UPPR|#)\\b',
+  LINE2_WITH_UNIT: '\\s(APARTMENT|APT|BASEMENT|BSMT|BLDG|BUILDING|DEPARTMENT|DEPT|FL|FLOOR|FRNT|FRONT|HANGAR|HNGR|LBBY|LOBBY|LOT|LOWER|LOWR|OFC|OFFICE|PENTHOUSE|PH|PIER|REAR|RM|ROOM|SIDE|SLIP|SPACE|SPC|STE|STOP|SUITE|TRAILER|TRLR|UNIT|UPPER|UPPR|#)\\.?\\s[a-zA-Z0-9_-]+$'
 };
 
 module.exports = {
@@ -133,6 +155,7 @@ module.exports = {
   US_STREET_DIRECTIONAL,
   US_LINE2_PREFIXES,
   PUERTO_RICO_PATTERNS,
+  PUERTO_RICO_CONSTANTS,
   POSTAL_CODE_PATTERNS,
   ADDRESS_PATTERNS
 };

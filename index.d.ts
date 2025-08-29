@@ -31,4 +31,8 @@ declare module "@solinkcorp/addresser" {
 		id: string;
 		format(formatType?: string): INoonlightFormat | IParsedAddress;
 	}
+
+	export interface IStateCities {
+		[key: string]: string[];
+	}
 }

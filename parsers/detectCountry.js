@@ -10,20 +10,33 @@ const {
   COUNTRY_NAMES,
   COUNTRY_ALIASES,
   CANADIAN_PROVINCES,
-  PUERTO_RICO_PATTERNS
-} = require('./constants');
+  PUERTO_RICO_PATTERNS,
+  POSTAL_CODE_PATTERNS
+} = require('../constants');
 
 /**
  * Detects country from explicit country section in address
  * @param {string} countrySection - The country section from address parsing
+ * @param {string} addressString - Full address string for context
  * @returns {object} - Object with country info and whether section should be removed
  */
-function detectFromCountrySection(countrySection) {
+function detectFromCountrySection(countrySection, addressString = '') {
   if (!countrySection) {
     return { country: null, shouldRemoveSection: false };
   }
 
   const upperSection = countrySection.trim().toUpperCase();
+  
+  // Special handling for "CA" - check if address contains Canadian postal code pattern
+  if (upperSection === 'CA' && addressString) {
+    if (addressString.match(POSTAL_CODE_PATTERNS.CANADIAN_POSTAL)) {
+      return { 
+        country: COUNTRY_CODES.CA, 
+        shouldRemoveSection: true 
+      };
+    }
+  }
+  
   // Check each country's aliases
   for (const [countryCode, aliases] of Object.entries(COUNTRY_ALIASES)) {
     if (aliases.includes(upperSection)) {
@@ -112,7 +125,7 @@ function detectCountry({ countrySection, stateAbbreviation, stateName, addressSt
   };
 
   // Priority 1: Check explicit country section
-  const countryResult = detectFromCountrySection(countrySection);
+  const countryResult = detectFromCountrySection(countrySection, addressString);
   if (countryResult.country) {
     detectionResult = {
       ...getCountryInfo(countryResult.country),
@@ -136,8 +149,16 @@ function detectCountry({ countrySection, stateAbbreviation, stateName, addressSt
   // Priority 3: Detect from state/province if we have valid state info
   if (stateAbbreviation || stateName) {
     const stateCountry = detectFromStateOrProvince(stateAbbreviation, stateName);
-    // Only override if we detected a specific country (not default US)
-    if (stateCountry !== COUNTRY_CODES.US || !countryResult.country) {
+    // Always prioritize state/province detection for non-US countries (Canada, Puerto Rico)
+    // This handles cases where "CA" suffix is ambiguous between California and Canada
+    if (stateCountry !== COUNTRY_CODES.US) {
+      detectionResult = {
+        ...getCountryInfo(stateCountry),
+        shouldRemoveCountrySection: detectionResult.shouldRemoveCountrySection,
+        detectionMethod: 'state_province'
+      };
+    } else if (!countryResult.country) {
+      // Only use US state detection if no explicit country was found
       detectionResult = {
         ...getCountryInfo(stateCountry),
         shouldRemoveCountrySection: detectionResult.shouldRemoveCountrySection,

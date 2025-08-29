@@ -1,5 +1,5 @@
 const usCities = require('./data/us-cities.json');
-const { parser } = require('./parser');
+const { baseParser } = require('./parsers/baseParser');
 
 'use strict';
 
@@ -10,7 +10,7 @@ const { parser } = require('./parser');
  **/
 function parseAddress(address) {
   // Get the parsed result from the parser
-  const result = parser(address);
+  const result = baseParser(address);
   
   // Add format method to the result object
   result.format = function(formatType) {
@@ -34,7 +34,7 @@ function parseAddress(address) {
         ...(this.addressLine2 && { line2: this.addressLine2 }),
         city: this.placeName,
         ...(this.countryAbbreviation !== 'PR' && { state: this.stateAbbreviation }),
-        zip: this.zipCode,
+        zip: this.zipCodePlusFour ? this.zipCodePlusFour : this.zipCode,
         country: this.countryAbbreviation,
       };
       
