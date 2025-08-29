@@ -11,7 +11,7 @@ const {
   COUNTRY_ALIASES,
   CANADIAN_PROVINCES,
   PUERTO_RICO_PATTERNS
-} = require('./constants');
+} = require('../constants');
 
 /**
  * Detects country from explicit country section in address
