@@ -210,7 +210,7 @@ function parseRegularStreet(streetString, result) {
         } else {
           // Check if line2 data was already parsed
           if (result.hasOwnProperty('addressLine2') && result.addressLine2.length > 0) {
-            throw 'Can not parse address. Too many address lines. Input string: ' + address;
+            throw 'Can not parse address. Too many address lines. Input string: ' + streetString;
           } else {
             result.addressLine2 = remainingText;
           }
