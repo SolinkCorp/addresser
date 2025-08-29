@@ -121,6 +121,40 @@ function parseRegularHighway(streetString, result) {
 }
 
 /**
+ * Parse State Route addresses (40015 CA-49, 123 TX-35, etc.)
+ */
+function parseStateRoute(streetString, result) {
+  if (streetString.match(ADDRESS_PATTERNS.STATE_ROUTE)) {
+    const stateRouteMatch = streetString.match(ADDRESS_PATTERNS.STATE_ROUTE)[0];
+    const remainingText = streetString.replace(stateRouteMatch, '').trim();
+    const streetParts = stateRouteMatch.split(' ');
+    
+    if (streetParts.length >= 2) {
+      result.streetNumber = streetParts[0];
+      // Handle state route format like "CA-49"
+      const routeParts = streetParts[1].split('-');
+      if (routeParts.length === 2) {
+        result.streetName = routeParts[1]; // The number part (49)
+        result.streetSuffix = routeParts[0]; // The state part (CA)
+        result.addressLine1 = result.streetNumber + ' ' + streetParts[1]; // "40015 CA-49"
+      } else {
+        // Fallback if format doesn't match expected pattern
+        result.streetName = streetParts[1];
+        result.addressLine1 = stateRouteMatch;
+      }
+    }
+    
+    // Handle any remaining text as address line 2
+    if (remainingText && remainingText.length > 0) {
+      result.addressLine2 = remainingText;
+    }
+    
+    return true;
+  }
+  return false;
+}
+
+/**
  * Parse Avenue Letter addresses (826 N Ave C)
  */
 function parseAvenueLetter(streetString, result, originalAddress) {
@@ -264,6 +298,7 @@ module.exports = {
   parsePuertoRicoStreet,
   parseUSHighway,
   parseRegularHighway,
+  parseStateRoute,
   parseAvenueLetter,
   parsePOBox,
   parseNoSuffix,

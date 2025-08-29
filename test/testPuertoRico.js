@@ -219,5 +219,18 @@ describe('#parseAddress - Puerto Rico NOONLIGHT Format Tests', function() {
             expect(noonlightFormat.zip).to.equal('00725');
             expect(noonlightFormat.country).to.equal("PR");
         });
+
+        it('should handle Puerto Rico highway address starting with KM marker in NOONLIGHT format', function() {
+            const result = addresser.parseAddress('KM 15.1 HM 2, CAGUAS, PR 00725');
+            const noonlightFormat = result.format('NOONLIGHT');
+            
+            expect(noonlightFormat.hasOwnProperty('formatted_address')).to.equal(false);
+            expect(noonlightFormat.line1).to.equal('KM 15.1 HM 2');
+            expect(noonlightFormat.hasOwnProperty('line2')).to.equal(false);
+            expect(noonlightFormat.city).to.equal('Caguas');
+            expect(noonlightFormat.hasOwnProperty('state')).to.equal(false);
+            expect(noonlightFormat.zip).to.equal('00725');
+            expect(noonlightFormat.country).to.equal("PR");
+        });
     });
 });

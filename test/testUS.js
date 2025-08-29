@@ -180,6 +180,21 @@ describe('#parseAddress - United States Tests', function() {
             expect(result.countryAbbreviation).to.equal("US");
         });
 
+        it('should parse a highway address with US prefix and Hwy suffix', function() {
+            const result = addresser.parseAddress('500 N U.S. Hwy 281 unit 112, San Antonio, TX 78221');
+            expect(result.streetNumber).to.equal("500");
+            expect(result.streetName).to.equal("281");
+            expect(result.streetSuffix).to.equal("N U.S. Hwy");
+            expect(result.addressLine1).to.equal("500 N U.S. Hwy 281");
+            expect(result.addressLine2).to.equal("unit 112");
+            expect(result.placeName).to.equal("San Antonio");
+            expect(result.stateAbbreviation).to.equal("TX");
+            expect(result.stateName).to.equal("Texas");
+            expect(result.zipCode).to.equal("78221");
+            expect(result.country).to.equal("United States");
+            expect(result.countryAbbreviation).to.equal("US");
+        });
+
         it('should parse a highway address with US prefix and Highway suffix (normalized)', function() {
             const result = addresser.parseAddress('904 US Highway 278, Bluffton, SC 29910');
             expect(result.streetNumber).to.equal("904");
@@ -221,6 +236,66 @@ describe('#parseAddress - United States Tests', function() {
             expect(result.stateAbbreviation).to.equal("SC");
             expect(result.stateName).to.equal("South Carolina");
             expect(result.zipCode).to.equal("29910");
+            expect(result.country).to.equal("United States");
+            expect(result.countryAbbreviation).to.equal("US");
+        });
+
+        it('should parse a state route address with dash (CA-49)', function() {
+            const result = addresser.parseAddress('40015 CA-49, Oakhurst, CA 93644, USA');
+            expect(result.streetNumber).to.equal("40015");
+            expect(result.streetName).to.equal("49");
+            expect(result.streetSuffix).to.equal("CA");
+            expect(result.addressLine1).to.equal("40015 CA-49");
+            expect(result.hasOwnProperty("addressLine2")).to.equal(false);
+            expect(result.placeName).to.equal("Oakhurst");
+            expect(result.stateAbbreviation).to.equal("CA");
+            expect(result.stateName).to.equal("California");
+            expect(result.zipCode).to.equal("93644");
+            expect(result.country).to.equal("United States");
+            expect(result.countryAbbreviation).to.equal("US");
+        });
+
+        it('should parse a Texas state route address (TX-35)', function() {
+            const result = addresser.parseAddress('123 TX-35, Austin, TX 78701');
+            expect(result.streetNumber).to.equal("123");
+            expect(result.streetName).to.equal("35");
+            expect(result.streetSuffix).to.equal("TX");
+            expect(result.addressLine1).to.equal("123 TX-35");
+            expect(result.hasOwnProperty("addressLine2")).to.equal(false);
+            expect(result.placeName).to.equal("Austin");
+            expect(result.stateAbbreviation).to.equal("TX");
+            expect(result.stateName).to.equal("Texas");
+            expect(result.zipCode).to.equal("78701");
+            expect(result.country).to.equal("United States");
+            expect(result.countryAbbreviation).to.equal("US");
+        });
+
+        it('should parse a New York state route address (NY-17)', function() {
+            const result = addresser.parseAddress('456 NY-17, Bronx, NY 10451');
+            expect(result.streetNumber).to.equal("456");
+            expect(result.streetName).to.equal("17");
+            expect(result.streetSuffix).to.equal("NY");
+            expect(result.addressLine1).to.equal("456 NY-17");
+            expect(result.hasOwnProperty("addressLine2")).to.equal(false);
+            expect(result.placeName).to.equal("Bronx");
+            expect(result.stateAbbreviation).to.equal("NY");
+            expect(result.stateName).to.equal("New York");
+            expect(result.zipCode).to.equal("10451");
+            expect(result.country).to.equal("United States");
+            expect(result.countryAbbreviation).to.equal("US");
+        });
+
+        it('should parse a Florida state route address (FL-95)', function() {
+            const result = addresser.parseAddress('789 FL-95, Miami, FL 33101');
+            expect(result.streetNumber).to.equal("789");
+            expect(result.streetName).to.equal("95");
+            expect(result.streetSuffix).to.equal("FL");
+            expect(result.addressLine1).to.equal("789 FL-95");
+            expect(result.hasOwnProperty("addressLine2")).to.equal(false);
+            expect(result.placeName).to.equal("Miami");
+            expect(result.stateAbbreviation).to.equal("FL");
+            expect(result.stateName).to.equal("Florida");
+            expect(result.zipCode).to.equal("33101");
             expect(result.country).to.equal("United States");
             expect(result.countryAbbreviation).to.equal("US");
         });
@@ -674,6 +749,58 @@ describe('#parseAddress - US NOONLIGHT Format Tests', function() {
             expect(noonlightFormat.city).to.equal('Austin');
             expect(noonlightFormat.state).to.equal('TX');
             expect(noonlightFormat.zip).to.equal('78730');
+            expect(noonlightFormat.country).to.equal('US');
+        });
+
+        it('should format CA state route address in NOONLIGHT format', function() {
+            const result = addresser.parseAddress('40015 CA-49, Oakhurst, CA 93644');
+            const noonlightFormat = result.format('NOONLIGHT');
+            
+            expect(noonlightFormat.hasOwnProperty('formatted_address')).to.equal(false);
+            expect(noonlightFormat.line1).to.equal('40015 CA-49');
+            expect(noonlightFormat.hasOwnProperty('line2')).to.equal(false);
+            expect(noonlightFormat.city).to.equal('Oakhurst');
+            expect(noonlightFormat.state).to.equal('CA');
+            expect(noonlightFormat.zip).to.equal('93644');
+            expect(noonlightFormat.country).to.equal('US');
+        });
+
+        it('should format TX state route address in NOONLIGHT format', function() {
+            const result = addresser.parseAddress('1234 TX-35, Austin, TX 78701');
+            const noonlightFormat = result.format('NOONLIGHT');
+            
+            expect(noonlightFormat.hasOwnProperty('formatted_address')).to.equal(false);
+            expect(noonlightFormat.line1).to.equal('1234 TX-35');
+            expect(noonlightFormat.hasOwnProperty('line2')).to.equal(false);
+            expect(noonlightFormat.city).to.equal('Austin');
+            expect(noonlightFormat.state).to.equal('TX');
+            expect(noonlightFormat.zip).to.equal('78701');
+            expect(noonlightFormat.country).to.equal('US');
+        });
+
+        it('should format NY state route address in NOONLIGHT format', function() {
+            const result = addresser.parseAddress('5678 NY-17, Buffalo, NY 14201');
+            const noonlightFormat = result.format('NOONLIGHT');
+            
+            expect(noonlightFormat.hasOwnProperty('formatted_address')).to.equal(false);
+            expect(noonlightFormat.line1).to.equal('5678 NY-17');
+            expect(noonlightFormat.hasOwnProperty('line2')).to.equal(false);
+            expect(noonlightFormat.city).to.equal('Buffalo');
+            expect(noonlightFormat.state).to.equal('NY');
+            expect(noonlightFormat.zip).to.equal('14201');
+            expect(noonlightFormat.country).to.equal('US');
+        });
+
+        it('should format FL state route address in NOONLIGHT format', function() {
+            const result = addresser.parseAddress('9999 FL-95, Miami, FL 33101');
+            const noonlightFormat = result.format('NOONLIGHT');
+            
+            expect(noonlightFormat.hasOwnProperty('formatted_address')).to.equal(false);
+            expect(noonlightFormat.line1).to.equal('9999 FL-95');
+            expect(noonlightFormat.hasOwnProperty('line2')).to.equal(false);
+            expect(noonlightFormat.city).to.equal('Miami');
+            expect(noonlightFormat.state).to.equal('FL');
+            expect(noonlightFormat.zip).to.equal('33101');
             expect(noonlightFormat.country).to.equal('US');
         });
     });

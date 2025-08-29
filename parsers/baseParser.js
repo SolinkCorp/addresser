@@ -4,7 +4,7 @@ const prCities = require('../data/pr-cities.json');
 const { detectCountry, isPR } = require('./detectCountry');
 const { PUERTO_RICO_PATTERNS, PUERTO_RICO_CONSTANTS, POSTAL_CODE_PATTERNS, US_LINE2_PREFIXES } = require('../constants');
 const { getKeyByValue, toTitleCase, createLine2PrefixString, handleAddressPart, findCityInList } = require('../utils/utils');
-const { parsePuertoRicoStreet, parseUSHighway, parseRegularHighway, parseAvenueLetter, parsePOBox, parseNoSuffix, parseRegularStreet } = require('./parserHelpers');
+const { parsePuertoRicoStreet, parseUSHighway, parseRegularHighway, parseStateRoute, parseAvenueLetter, parsePOBox, parseNoSuffix, parseRegularStreet } = require('./parserHelpers');
 
 'use strict';
 
@@ -179,6 +179,10 @@ function baseParser(address) {
     } 
     // Parse regular Highway addresses  
     else if (parseRegularHighway(streetString, result)) {
+      // Parsed successfully
+    }
+    // Parse State Route addresses (CA-49, TX-35, etc.)
+    else if (parseStateRoute(streetString, result)) {
       // Parsed successfully
     } 
     // Parse Avenue Letter addresses
