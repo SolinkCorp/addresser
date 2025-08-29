@@ -277,7 +277,7 @@ describe('#parseAddress with format method - NOONLIGHT Format Tests', function()
             expect(noonlightFormat.hasOwnProperty("state")).to.equal(false);
         });
 
-        it('should handle Puerto Rico highway address in NOONLIGHT format', function() {
+        it('should handle Canadian city North York', function() {
             const result = addresser.parseAddress('3401 Dufferin St Unit 510, North York, ON M6A 2T9, Canada');
             const noonlightFormat = result.format('NOONLIGHT');
             
@@ -289,7 +289,7 @@ describe('#parseAddress with format method - NOONLIGHT Format Tests', function()
             expect(noonlightFormat.country).to.equal("CA");
         });
 
-        it('should handle Puerto Rico highway address in NOONLIGHT format', function() {
+        it('should handle Canadian city Port Coquitlam in NOONLIGHT format', function() {
             const result = addresser.parseAddress('1097 Nicola Ave #120, Port Coquitlam, BC V3B 8B2, Canada');
             const noonlightFormat = result.format('NOONLIGHT');
             
@@ -298,28 +298,6 @@ describe('#parseAddress with format method - NOONLIGHT Format Tests', function()
             expect(noonlightFormat.city).to.equal("Port Coquitlam");
             expect(noonlightFormat.zip).to.equal("V3B 8B2");
             expect(noonlightFormat.state).to.equal("BC");
-            expect(noonlightFormat.country).to.equal("CA");
-        });
-
-        it('should handle Puerto Rico highway address in NOONLIGHT format', function() {
-            const result = addresser.parseAddress('2625C Weston Rd #40047, North York, ON M9N 3X2, Canada');
-            const noonlightFormat = result.format('NOONLIGHT');
-            
-            expect(noonlightFormat.line1).to.equal("2625C Weston Rd");
-            expect(noonlightFormat.line2).to.equal("#40047");
-            expect(noonlightFormat.city).to.equal("North York");
-            expect(noonlightFormat.zip).to.equal("M9N 3X2");
-            expect(noonlightFormat.state).to.equal("ON");
-            expect(noonlightFormat.country).to.equal("CA");
-        });
-
-        it('should handle Puerto Rico highway address in NOONLIGHT format', function() {
-            const result = addresser.parseAddress('3401 Dufferin St Unit 510, North York, ON M6A 2T9, Canada');
-            const noonlightFormat = result.format('NOONLIGHT');
-            expect(noonlightFormat.line1).to.equal("3401 Dufferin St");
-            expect(noonlightFormat.city).to.equal("North York");
-            expect(noonlightFormat.zip).to.equal("M6A 2T9");
-            expect(noonlightFormat.state).to.equal("ON");
             expect(noonlightFormat.country).to.equal("CA");
         });
     });

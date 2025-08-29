@@ -1146,6 +1146,103 @@ describe('#parseAddress, should detect country from address if missing from addr
         expect(result.countryAbbreviation).to.equal("PR");
     });
 
+    it('should parse a Puerto Rico address starting with KM marker', function() {
+        const result = addresser.parseAddress('KM 15.1 Barrio of Las Palmas, Cabo Rojo, PR 00623, USA');
+
+        expect(result.streetSuffix).to.equal("KM");
+        expect(result.streetName).to.equal("15.1");
+        expect(result.streetNumber).to.equal("15.1");
+        expect(result.addressLine1).to.equal("KM 15.1 Barrio of Las Palmas");
+        expect(result.hasOwnProperty("addressLine2")).to.equal(false);
+        expect(result.placeName).to.equal("Cabo Rojo");
+        expect(result.zipCode).to.equal("00623");
+        expect(result.stateAbbreviation).to.equal("PR");
+        expect(result.stateName).to.equal("Puerto Rico");
+        expect(result.country).to.equal("Puerto Rico");
+        expect(result.countryAbbreviation).to.equal("PR");
+    });
+
+    it('should parse a highway address with US prefix and Hwy suffix', function() {
+        const result = addresser.parseAddress('904 US Hwy 278, Amory, MS 38821, USA');
+
+        expect(result.streetSuffix).to.equal("US Hwy");
+        expect(result.streetName).to.equal("278");
+        expect(result.streetNumber).to.equal("904");
+        expect(result.addressLine1).to.equal("904 US Hwy 278");
+        expect(result.hasOwnProperty("addressLine2")).to.equal(false);
+        expect(result.placeName).to.equal("Amory");
+        expect(result.zipCode).to.equal("38821");
+        expect(result.stateAbbreviation).to.equal("MS");
+        expect(result.stateName).to.equal("Mississippi");
+        expect(result.country).to.equal("United States");
+        expect(result.countryAbbreviation).to.equal("US");
+    });
+
+    it('should parse a highway address with US prefix and Highway suffix (normalized)', function() {
+        const result = addresser.parseAddress('1639 US Highway 74A, Spindale, NC 28160-1880');
+
+        expect(result.streetSuffix).to.equal("US Hwy");
+        expect(result.streetName).to.equal("74A");
+        expect(result.streetNumber).to.equal("1639");
+        expect(result.addressLine1).to.equal("1639 US Highway 74A");
+        expect(result.hasOwnProperty("addressLine2")).to.equal(false);
+        expect(result.placeName).to.equal("Spindale");
+        expect(result.zipCode).to.equal("28160");
+        expect(result.zipCodePlusFour).to.equal("28160-1880");
+        expect(result.stateAbbreviation).to.equal("NC");
+        expect(result.stateName).to.equal("North Carolina");
+        expect(result.country).to.equal("United States");
+        expect(result.countryAbbreviation).to.equal("US");
+    });
+
+    it('should parse a highway address with Highway suffix (no prefix)', function() {
+        const result = addresser.parseAddress('904 Highway 278, Amory, MS 38821, USA');
+
+        expect(result.streetSuffix).to.equal("Hwy");
+        expect(result.streetName).to.equal("278");
+        expect(result.streetNumber).to.equal("904");
+        expect(result.addressLine1).to.equal("904 Highway 278");
+        expect(result.hasOwnProperty("addressLine2")).to.equal(false);
+        expect(result.placeName).to.equal("Amory");
+        expect(result.zipCode).to.equal("38821");
+        expect(result.stateAbbreviation).to.equal("MS");
+        expect(result.stateName).to.equal("Mississippi");
+        expect(result.country).to.equal("United States");
+        expect(result.countryAbbreviation).to.equal("US");
+    });
+
+    it('should parse a highway address with US prefix and Highway suffix', function() {
+        const result = addresser.parseAddress('904 US Highway 278, Amory, MS 38821, USA');
+
+        expect(result.streetSuffix).to.equal("US Hwy");
+        expect(result.streetName).to.equal("278");
+        expect(result.streetNumber).to.equal("904");
+        expect(result.addressLine1).to.equal("904 US Highway 278");
+        expect(result.hasOwnProperty("addressLine2")).to.equal(false);
+        expect(result.placeName).to.equal("Amory");
+        expect(result.zipCode).to.equal("38821");
+        expect(result.stateAbbreviation).to.equal("MS");
+        expect(result.stateName).to.equal("Mississippi");
+        expect(result.country).to.equal("United States");
+        expect(result.countryAbbreviation).to.equal("US");
+    });
+
+    it('should parse a highway address with Unit as addressLine2', function() {
+        const result = addresser.parseAddress('904 US Hwy 278 Unit 3, Amory, MS 38821, USA');
+
+        expect(result.streetSuffix).to.equal("US Hwy");
+        expect(result.streetName).to.equal("278");
+        expect(result.streetNumber).to.equal("904");
+        expect(result.addressLine1).to.equal("904 US Hwy 278");
+        expect(result.addressLine2).to.equal("Unit 3");
+        expect(result.placeName).to.equal("Amory");
+        expect(result.zipCode).to.equal("38821");
+        expect(result.stateAbbreviation).to.equal("MS");
+        expect(result.stateName).to.equal("Mississippi");
+        expect(result.country).to.equal("United States");
+        expect(result.countryAbbreviation).to.equal("US");
+    });
+
     // Country Detection Tests
     it('should detect United States from state abbreviation', function() {
         var result = addresser.parseAddress("123 Main St, Austin, TX 78701");
