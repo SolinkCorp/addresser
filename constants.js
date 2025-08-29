@@ -139,10 +139,6 @@ const ADDRESS_PATTERNS = {
   // Directional patterns
   STREET_DIRECTIONAL_SUFFIX: '.*\\b(?:north|northeast|east|southeast|south|southwest|west|northwest|n|ne|e|se|s|sw|w|nw)$',
   
-  // Highway identification patterns
-  HIGHWAY_NUMBER: /^\d+$/,
-  HIGHWAY_WITH_PREFIX: /^[A-Z]+\s*\d+$/,
-  
   // State route patterns (CA-49, TX-35, etc.)
   STATE_ROUTE: /\b\d+\s+[A-Z]{2}-\d+[A-Za-z]*\b/i,
   

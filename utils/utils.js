@@ -28,6 +28,7 @@ export function handleAddressPart(addressParts, stateString) {
         return addressParts[addressParts.length-1];
     } else {
         addressParts.splice(-1,1);
+        if (addressParts.length === 0) return '';
         return addressParts[addressParts.length-1].trim();
     }
 }

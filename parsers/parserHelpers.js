@@ -236,7 +236,7 @@ function parseRegularStreet(streetString, result) {
         // If the remaining text is just a number or looks like highway identification,
         // include it in the street name instead of making it addressLine2
         const remainingText = streetString.trim();
-        const isHighwayNumber = ADDRESS_PATTERNS.HIGHWAY_NUMBER.test(remainingText) || ADDRESS_PATTERNS.HIGHWAY_WITH_PREFIX.test(remainingText);
+        const isHighwayNumber = ADDRESS_PATTERNS.HIGHWAY && ADDRESS_PATTERNS.HIGHWAY.test(remainingText);
         
         if (isHighwayNumber) {
           // This looks like highway identification, include it in the street name
