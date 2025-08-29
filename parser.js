@@ -194,11 +194,26 @@ function parser(address) {
     const reStreet = new RegExp('.*\\b(?:' + 
       Object.keys(usStreetTypes).join('|') + ')\\b\\.?' + 
       '( +(?:' + usStreetDirectionalString + ')\\b)?', 'i');
+    
+    // Single pattern for highway addresses with optional prefix
+    const reHighway = /\b\d+\s+(?:[A-Z]+\s+)?(?:hwy|highway|hiway|hiwy|hway)\s+\d+[A-Za-z]*/i;
+    
+    // Special pattern for U.S. Hwy addresses
+    const reUSHwy = /\b\d+\s+(?:N|S|E|W)\s+U\.?S\.?\s+(?:hwy|highway|hiway|hiwy|hway)\s+\d+[A-Za-z]*/i;
+    
     const rePO = ADDRESS_PATTERNS.PO_BOX;
     const reAveLetter = ADDRESS_PATTERNS.AVENUE_LETTER;
     const reNoSuffix = ADDRESS_PATTERNS.NO_SUFFIX;
     
-    if (isPR(detectedCountry) && streetString.match(PUERTO_RICO_PATTERNS.HIGHWAY)) {
+    if (isPR(detectedCountry) && streetString.match(PUERTO_RICO_PATTERNS.KM_MARKER)) {
+      // Handle addresses that start directly with KM marker: KM 15.1 or KM 15.1 HM 2
+      // Keep the entire address as one line, don't split into addressLine2
+      result.addressLine1 = streetString;
+      const streetParts = streetString.split(' ');
+      result.streetSuffix = 'KM';
+      result.streetName = streetParts[1]; // KM marker number
+      result.streetNumber = streetParts[1]; // KM marker number
+    } else if (isPR(detectedCountry) && streetString.match(PUERTO_RICO_PATTERNS.HIGHWAY)) {
       // Handle highway with KM marker format: CARR 1 KM 10.3 HM 2 or CARR 1 KM 10.3
       result.addressLine1 = streetString.match(PUERTO_RICO_PATTERNS.HIGHWAY)[0];
       streetString = streetString.replace(PUERTO_RICO_PATTERNS.HIGHWAY,"").trim();
@@ -221,6 +236,81 @@ function parser(address) {
       result.streetSuffix = streetParts[1].toUpperCase();
       result.streetName = streetParts.slice(2).join(' ');
       result.addressLine1 = result.streetNumber + ' ' + result.streetSuffix + ' ' + result.streetName;
+    } else if (streetString.match(reUSHwy)) {
+      // Handle U.S. Hwy addresses like "500 N U.S. Hwy 281"
+      const usHwyMatch = streetString.match(reUSHwy)[0];
+      const remainingText = streetString.replace(usHwyMatch, '').trim();
+      
+      const streetParts = usHwyMatch.split(' ');
+      // "500 N U.S. Hwy 281" -> [500, N, U.S., Hwy, 281]
+      result.streetNumber = streetParts[0];
+      result.streetName = streetParts[4]; // Highway number
+      result.streetSuffix = streetParts[1] + ' ' + streetParts[2] + ' ' + streetParts[3]; // "N US Hwy"
+      result.addressLine1 = result.streetNumber + ' ' + result.streetSuffix + ' ' + result.streetName;
+      
+      if (remainingText && remainingText.length > 0) {
+        result.addressLine2 = remainingText;
+      }
+    } else if (streetString.match(reHighway)) {
+      // Handle highway addresses like "904 US Highway 278" or "904 Highway 278"
+      const highwayMatch = streetString.match(reHighway)[0];
+      
+      // Check for additional text after the highway address
+      const remainingText = streetString.replace(highwayMatch, '').trim();
+      
+      const streetParts = highwayMatch.split(' ');
+      
+      // Parse based on whether there's a prefix and the suffix type
+      if (streetParts.length === 4) {
+        // "904 US Highway 278" -> [904, US, Highway, 278]
+        result.streetNumber = streetParts[0];
+        result.streetName = streetParts[3]; // Highway number
+        
+        // Check if we need to normalize the suffix
+        if (streetParts[2].toLowerCase() === 'highway') {
+          // Keep prefix in streetSuffix and addressLine1
+          result.streetSuffix = streetParts[1] + ' Hwy'; // e.g., "US Hwy"
+          result.addressLine1 = result.streetNumber + ' ' + streetParts[1] + ' ' + streetParts[2] + ' ' + result.streetName;
+        } else if (streetParts[2].toLowerCase() === 'hwy') {
+          // Keep prefix in streetSuffix for Hwy addresses too
+          result.streetSuffix = streetParts[1] + ' Hwy'; // e.g., "US Hwy"
+          result.addressLine1 = result.streetNumber + ' ' + streetParts[1] + ' ' + streetParts[2] + ' ' + result.streetName;
+        } else {
+          result.streetSuffix = streetParts[2]; // Keep original suffix
+          result.addressLine1 = result.streetNumber + ' ' + streetParts[1] + ' ' + result.streetSuffix + ' ' + result.streetName;
+        }
+      } else if (streetParts.length === 3) {
+        // "904 Highway 278" -> [904, Highway, 278]
+        result.streetNumber = streetParts[0];
+        result.streetName = streetParts[2]; // Highway number
+        
+        // Check if we need to normalize the suffix
+        if (streetParts[1].toLowerCase() === 'highway') {
+          result.streetSuffix = 'Hwy'; // Normalize to Hwy for consistency
+          result.addressLine1 = result.streetNumber + ' ' + streetParts[1] + ' ' + result.streetName;
+        } else {
+          result.streetSuffix = streetParts[1]; // Keep original suffix
+          result.addressLine1 = result.streetNumber + ' ' + result.streetSuffix + ' ' + result.streetName;
+        }
+      }
+      
+      // Handle remaining text (like directional suffixes)
+      if (remainingText && remainingText.length > 0) {
+        // Check if it's a directional suffix (E, East, etc.)
+        const directionalMatch = remainingText.match(/^(E|W|N|S|East|West|North|South)\.?$/i);
+        if (directionalMatch) {
+          // Add directional to streetSuffix and addressLine1
+          const directional = directionalMatch[1].replace(/\.$/, ''); // Remove trailing period
+          result.streetSuffix = result.streetSuffix + ' ' + directional;
+          result.addressLine1 = result.addressLine1 + ' ' + directional;
+        } else if (remainingText === '.') {
+          // Ignore trailing periods
+          // Don't set addressLine2
+        } else {
+          // Other remaining text goes to addressLine2
+          result.addressLine2 = remainingText;
+        }
+      }
     } else if (streetString.match(reAveLetter)) {
       result.addressLine1 = streetString.match(reAveLetter)[0];
       streetString = streetString.replace(reAveLetter,"").trim(); // Carve off the first address line
@@ -251,15 +341,32 @@ function parser(address) {
     } else if (streetString.match(reStreet)) {
       result.addressLine1 = streetString.match(reStreet)[0];
       streetString = streetString.replace(reStreet,"").trim(); // Carve off the first address line
+      
+      // Check if the remaining text looks like it's part of the street name (e.g., highway numbers)
+      // rather than a separate address line
       if (streetString && streetString.length > 0) {
-        // Check if line2 data was already parsed
-        if (result.hasOwnProperty('addressLine2') && result.addressLine2.length > 0) {
-          throw 'Can not parse address. Too many address lines. Input string: ' + address;
+        // If the remaining text is just a number or looks like highway identification,
+        // include it in the street name instead of making it addressLine2
+        const remainingText = streetString.trim();
+        const isHighwayNumber = /^\d+$/.test(remainingText) || /^[A-Z]+\s*\d+$/.test(remainingText);
+        
+        if (isHighwayNumber) {
+          // This looks like highway identification, include it in the street name
+          result.addressLine1 = result.addressLine1 + ' ' + remainingText;
         } else {
-          result.addressLine2 = streetString;
+          // Check if line2 data was already parsed
+          if (result.hasOwnProperty('addressLine2') && result.addressLine2.length > 0) {
+            throw 'Can not parse address. Too many address lines. Input string: ' + address;
+          } else {
+            result.addressLine2 = remainingText;
+          }
         }
       }
+      
+      // Re-split the addressLine1 since we may have modified it
       const streetParts = result.addressLine1.split(' ');
+      
+
   
       // Check if directional is last element
       const re = new RegExp('.*\\b(?:' + usStreetDirectionalString + ')$', 'i');
@@ -273,8 +380,14 @@ function parser(address) {
       // If there are only 2 street parts (number and name) then its likely missing a "real" suffix and the street name just happened to match a suffix
       if (streetParts.length > 2) {
         // Remove '.' if it follows streetSuffix
-        streetParts[streetParts.length-1] = streetParts[streetParts.length-1].replace(/\.$/, '');
-        result.streetSuffix = toTitleCase(usStreetTypes[streetParts[streetParts.length-1].toLowerCase()]);
+        const lastPart = streetParts[streetParts.length-1];
+        if (lastPart && typeof lastPart === 'string') {
+          streetParts[streetParts.length-1] = lastPart.replace(/\.$/, '');
+          const streetTypeKey = streetParts[streetParts.length-1].toLowerCase();
+          if (usStreetTypes[streetTypeKey]) {
+            result.streetSuffix = toTitleCase(usStreetTypes[streetTypeKey]);
+          }
+        }
       }
       
       result.streetName = streetParts[1]; // Assume street name is everything in the middle

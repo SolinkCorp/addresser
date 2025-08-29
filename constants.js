@@ -105,6 +105,8 @@ const US_LINE2_PREFIXES = {
 const PUERTO_RICO_PATTERNS = {
   STREET: /\b\d+\s+(calle|avenida|cam|camino|paseo|plaza|callejon)\s+[a-zA-Z0-9_ ]+/i,
   HIGHWAY: /\bcarr\s+\d+\s+km\s+[\d\.]+(?:\s+hm\s+\d+)?/i,
+  // Pattern for addresses that start directly with KM (kilometer marker) without CARR prefix
+  KM_MARKER: /^(?!.*\bcarr\b).*\bkm\s+[\d\.]+(?:\s+hm\s+\d+)?/i,
   // Pattern for detecting Puerto Rico in strings - handles various zip+state formats
   DETECTION: / PR$|PR$| PUERTO RICO$|PUERTO RICO$|\b\d{5},?\s+PR\b|\bPR\s+\d{5},?\s+PR\b/i,
   // Pattern specifically for zip code extraction with PR as country
