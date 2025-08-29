@@ -34,7 +34,7 @@ function parseAddress(address) {
         ...(this.addressLine2 && { line2: this.addressLine2 }),
         city: this.placeName,
         ...(this.countryAbbreviation !== 'PR' && { state: this.stateAbbreviation }),
-        zip: this.zipCode,
+        zip: this.zipCodePlusFour ? this.zipCodePlusFour : this.zipCode,
         country: this.countryAbbreviation,
       };
       

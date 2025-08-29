@@ -803,5 +803,29 @@ describe('#parseAddress - US NOONLIGHT Format Tests', function() {
             expect(noonlightFormat.zip).to.equal('33101');
             expect(noonlightFormat.country).to.equal('US');
         });
+
+        it('should handle US-98 & Lamar Blvd in NOONLIGHT format', function() {
+            const result = addresser.parseAddress('US-98 & Lamar Blvd, Hattiesburg, MS 39402, USA');
+            const noonlightFormat = result.format('NOONLIGHT');
+            
+            expect(noonlightFormat.line1).to.equal('US-98 & Lamar Blvd');
+            expect(noonlightFormat.hasOwnProperty('line2')).to.equal(false);
+            expect(noonlightFormat.city).to.equal('Hattiesburg');
+            expect(noonlightFormat.state).to.equal('MS');
+            expect(noonlightFormat.zip).to.equal('39402');
+            expect(noonlightFormat.country).to.equal('US');
+        });
+        
+        it('should handle zip plus 4 in NOONLIGHT format', function() {
+            const result = addresser.parseAddress('10776 Sudley Manor Dr, Manassas, VA 20109-2833');
+            const noonlightFormat = result.format('NOONLIGHT');
+            
+            expect(noonlightFormat.line1).to.equal('10776 Sudley Manor Dr');
+            expect(noonlightFormat.hasOwnProperty('line2')).to.equal(false);
+            expect(noonlightFormat.city).to.equal('Manassas');
+            expect(noonlightFormat.state).to.equal('VA');
+            expect(noonlightFormat.zip).to.equal('20109-2833');
+            expect(noonlightFormat.country).to.equal('US');
+        });
     });
 });
